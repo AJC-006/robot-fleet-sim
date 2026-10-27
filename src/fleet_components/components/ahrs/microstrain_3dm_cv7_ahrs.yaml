@@ -1,0 +1,46 @@
+model: MicroStrain 3DM-CV7-AHRS
+category: ahrs
+vendor: MicroStrain by HBK
+datasheet: https://www.microstrain.com/sites/default/files/8400-0141_3DM_CV7_Datasheet.pdf
+sources:
+  - {url: https://www.hbkworld.com/en/products/transducers/inertial-sensors/attitude-and-heading/3dm-cv7-ahrs, used_for: product page}
+  - {url: https://github.com/LORD-MicroStrain/microstrain_inertial, used_for: "ROS 2 driver microstrain_inertial_driver 4.10.0 (Jazzy): topics, frame defaults, rate parameters"}
+  - {url: https://github.com/ethz-asl/kalibr/wiki/IMU-Noise-Model, used_for: "continuous noise density -> per-sample sigma: sigma_d = N * sqrt(rate)"}
+specs:                                  # datasheet 8400-0141 Rev E
+  gyro_noise_density: 4.121e-5          # rad/s/sqrt(Hz) (8.5 deg/h/sqrt(Hz); ARW 0.14 deg/sqrt(h))
+  gyro_bias_instability: 7.27e-6        # rad/s (1.5 deg/h)
+  gyro_turn_on_bias: 6.98e-5            # rad/s (0.004 deg/s)
+  gyro_range: 4.363                     # rad/s (+/-250 deg/s setting; 500, 1000 available)
+  accel_noise_density: 2.942e-4         # m/s^2/sqrt(Hz) (30 ug/sqrt(Hz))
+  accel_bias_instability: 1.765e-4      # m/s^2 (18 ug)
+  accel_turn_on_bias: 3.923e-4          # m/s^2 (40 ug)
+  accel_range: 39.23                    # m/s^2 (+/-4 g setting; 8, 16 g available)
+  mag_range: 8.0e-4                     # T (+/-8 G); mag noise unpublished
+  output_rate_max: 1000                 # Hz (1-1000 Hz)
+  roll_pitch_accuracy_static: 0.00436   # rad (0.25 deg)
+  roll_pitch_accuracy_dynamic: 0.00873  # rad (0.5 deg)
+  heading_accuracy_static: 0.00873      # rad (0.5 deg)
+  heading_accuracy_dynamic: 0.0349      # rad (2 deg, AHRS with magnetometer)
+  mass: 0.0083                          # kg
+  power: 0.23                           # W
+ros_driver:
+  package: microstrain_inertial_driver
+  topics:
+    imu/data_raw: sensor_msgs/msg/Imu   # no orientation (orientation_covariance[0] = -1)
+    imu/data: sensor_msgs/msg/Imu       # filtered orientation + rates + accel
+    imu/mag: sensor_msgs/msg/MagneticField
+  frame_id: imu_link                    # driver default; use_enu_frame true -> ENU/FLU outputs (REP-103)
+  rate_hz: 100                          # driver defaults imu_data_rate 100 (imu_data_raw_rate 1, mag 0 = off)
+  qos: system_default
+sim:
+  gyro_noise_stddev_100hz: 4.121e-4     # rad/s = 4.121e-5 * sqrt(100)
+  accel_noise_stddev_100hz: 2.942e-3    # m/s^2 = 2.942e-4 * sqrt(100)
+  gyro_bias_stddev: 6.98e-5             # turn-on bias, drawn once per run
+  accel_bias_stddev: 3.923e-4
+  gyro_dynamic_bias_stddev: 7.27e-6     # bias instability; correlation time unpublished
+  accel_dynamic_bias_stddev: 1.765e-4
+  orientation_error: "roll/pitch 0.5 deg, heading 2 deg (dynamic spec) as error bounds; error process time constant unpublished"
+  covariances: "driver default static diag 0.01 for imu/data covariances (driver parameter imu_*_cov); reproduce as the driver publishes"
+limitations: >-
+  Magnetometer noise, the bias-instability correlation time and the onboard filter's error dynamics are
+  unpublished; they are modelled only as documented in docs/notes/sea.md.

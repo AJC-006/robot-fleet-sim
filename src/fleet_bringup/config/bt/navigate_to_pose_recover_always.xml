@@ -1,0 +1,43 @@
+<!--
+  Nav2 Jazzy's navigate_to_pose_w_replanning_and_recovery.xml without its error-code gates.
+
+  The stock tree only runs a recovery when WouldAPlannerRecoveryHelp / WouldAControllerRecoveryHelp
+  accept the error code, and neither accepts START_OCCUPIED (planner) or TF_ERROR (controller). Both
+  happen to the legged robots: AMCL can place a robot that is squeezing through a gap a few cm inside
+  the global costmap's inscribed zone, and on a loaded laptop the map->odom transform can lag for a
+  moment. With the gates the goal then fails at once; here the tree clears the costmaps, spins, waits
+  or backs up and tries again (up to 6 times), like the Humble default.
+  Used by sim.launch.py for kind: legged.
+-->
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <RecoveryNode number_of_retries="6" name="NavigateRecovery">
+      <PipelineSequence name="NavigateWithReplanning">
+        <ControllerSelector selected_controller="{selected_controller}" default_controller="FollowPath" topic_name="controller_selector"/>
+        <PlannerSelector selected_planner="{selected_planner}" default_planner="GridBased" topic_name="planner_selector"/>
+        <RateController hz="1.0">
+          <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+            <ComputePathToPose goal="{goal}" path="{path}" planner_id="{selected_planner}" error_code_id="{compute_path_error_code}"/>
+            <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+          </RecoveryNode>
+        </RateController>
+        <RecoveryNode number_of_retries="1" name="FollowPath">
+          <FollowPath path="{path}" controller_id="{selected_controller}" error_code_id="{follow_path_error_code}"/>
+          <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+        </RecoveryNode>
+      </PipelineSequence>
+      <ReactiveFallback name="RecoveryFallback">
+        <GoalUpdated/>
+        <RoundRobin name="RecoveryActions">
+          <Sequence name="ClearingActions">
+            <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+            <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
+          </Sequence>
+          <BackUp backup_dist="0.20" backup_speed="0.08" error_code_id="{backup_code_id}"/>
+          <Wait wait_duration="3.0"/>
+          <Spin spin_dist="1.57" error_code_id="{spin_error_code}"/>
+        </RoundRobin>
+      </ReactiveFallback>
+    </RecoveryNode>
+  </BehaviorTree>
+</root>

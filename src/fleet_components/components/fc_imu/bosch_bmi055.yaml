@@ -1,0 +1,24 @@
+model: Bosch Sensortec BMI055 6-axis MEMS IMU (secondary IMU of Holybro Pixhawk 6C)
+category: fc_imu
+vendor: Bosch Sensortec
+datasheet: https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmi055-ds000.pdf   # local copy used
+sources:
+  - {url: https://docs.holybro.com/autopilot/pixhawk-6c/overview, used_for: "BMI055 is IMU2 of the Pixhawk 6C"}
+specs:
+  accel_noise_density: 1.4710e-3        # m/s^2/rtHz = 150 ug/rtHz (datasheet, gFS2g, 25 C)
+  accel_zero_g_offset: 0.686            # m/s^2 = +-70 mg (x,y,z; datasheet gFS2g, 25 C)
+  gyro_noise_rms_bw47hz: 1.745e-3       # rad/s = 0.1 deg/s rms at BW 47 Hz  -> density 0.0146 deg/s/rtHz = 2.546e-4 rad/s/rtHz (derived: 0.1/sqrt(47))
+  gyro_zero_rate_offset: 1.745e-2       # rad/s = +-1 deg/s
+  bias_instability: unpublished
+ros_driver:
+  package: PX4 on-board driver bmi055 (uXRCE-DDS exposes only the voted IMU in sensor_combined)
+  topics: {/fmu/out/sensor_combined: px4_msgs/msg/SensorCombined}
+  frame_id: FRD body
+  rate_hz: 250
+  qos: PX4 uXRCE-DDS default
+sim:
+  gz_sensor: none                       # not instantiated, see limitations
+limitations: >-
+  Catalog entry only. The PX4 gz bridge has a single IMU input (imu_sensor), so a second simulated IMU
+  would not reach PX4. Choose this entry instead of tdk_icm_42688_p to simulate a vehicle whose primary
+  IMU is a BMI055 (noise values follow the same derivation as the ICM-42688-P entry).

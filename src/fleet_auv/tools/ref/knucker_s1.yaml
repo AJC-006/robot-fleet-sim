@@ -1,0 +1,63 @@
+# knucker AUV: single source of numbers (read by the Blender builder, the SDF/URDF generator and the nodes).
+# Body frame: x forward, y left, z up, origin at the hull's geometric centre (link base_link).
+name: knucker
+label: "Knucker (4-thruster hover AUV)"
+fluid_density: 1000.0          # fresh water (the lake)
+gravity: 9.8
+buoyancy_excess: 0.0075        # positively buoyant by 0.75 % of the weight
+cob_above_cog: 0.025           # m, centre of buoyancy above the centre of gravity (passive roll/pitch stability)
+
+hull:                          # visual hull profile, see fleet_auv/shape.py
+  length: 1.30
+  radius: 0.090
+  nose_len: 0.40
+  tail_len: 0.45
+  tail_radius: 0.045
+
+# primitive collisions == buoyancy volume (the Buoyancy system integrates their volumes). The hull is a stack of
+# `slabs` cylinders following the hull profile (gz graded buoyancy handles cylinders exactly; ellipsoids were off by ~40 %).
+slabs: 13
+collisions:                    # extra primitives (cylinders are along x)
+  - {name: duct_port, type: cylinder, r: 0.052, l: 0.16, pos: [-0.585, 0.15, 0]}
+  - {name: duct_stbd, type: cylinder, r: 0.052, l: 0.16, pos: [-0.585, -0.15, 0]}
+
+# 4 thrusters. dir = unit thrust direction for a positive command (the joint axis).
+thrusters:
+  port:   {pos: [-0.585,  0.15, 0.0], dir: [1, 0, 0], joint: thruster_port_joint}
+  stbd:   {pos: [-0.585, -0.15, 0.0], dir: [1, 0, 0], joint: thruster_stbd_joint}
+  vfore:  {pos: [ 0.33,   0.0,  0.0], dir: [0, 0, 1], joint: thruster_vfore_joint}
+  vaft:   {pos: [-0.30,   0.0,  0.0], dir: [0, 0, 1], joint: thruster_vaft_joint}
+thruster:
+  diameter: 0.09               # m, propeller
+  kt: 0.0072                   # gz thrust coefficient: T = rho * kt * w^2 * D^4 (w in rad/s)
+  max_thrust: 30.0             # N, either direction
+  lag_tau: 0.15                # s, first-order thruster lag modelled in the allocator
+
+sensors:
+  imu:   {pos: [0.0, 0.0, -0.025]}
+  dvl:   {pos: [-0.10, 0.0, -0.105]}     # looks down
+  camera: {pos: [0.64, 0.0, 0.02], hfov: 1.2}
+  sonar:  {pos: [0.60, 0.0, -0.06]}
+  depth_noise: 0.01            # m (1 sigma)
+  dvl_noise: 0.004             # m/s
+
+# Fossen-style hydrodynamic factors on top of the equivalent-spheroid estimate (see fleet_auv/params.py)
+hydro:
+  appendage_added_mass_y: 1.15   # fins, ducts
+  appendage_added_mass_z: 1.30
+  cd_x: 0.80                     # on frontal area pi*b^2 (ducts, fins and scales included)
+  cd_y: 1.10                     # on lateral planform
+  cd_z: 1.25                     # on plan area (flat fins, tunnels)
+  lin: {xU: -4.0, yV: -30.0, zW: -35.0, kP: -1.5, mQ: -6.0, nR: -4.0}
+  rot_quad: {kP: -3.0, mQ: -35.0, nR: -20.0}
+  mass_scale: 1.0
+  max_am_ratio: 0.7             # added mass cap, Ma / rigid-body mass (gz Hydrodynamics is explicit, ratio >= 1 diverges)
+
+# controller gains (fleet_auv/controller.py). SI units, depth positive down, N / N m outputs.
+control:
+  rate_hz: 50
+  depth:   {kp: 55.0, ki: 5.0, kd: 85.0, wn: 0.65, rate_max: 0.45, i_max: 12.0}
+  pitch:   {kp: 28.0, ki: 0.0, kd: 12.0, i_max: 3.0}
+  heading: {kp: 14.0, ki: 0.4, kd: 12.0, wn: 1.1, rate_max: 0.8, i_max: 3.0}
+  surge:   {kp: 30.0, ki: 14.0, acc_max: 0.3, i_max: 25.0}
+  yaw_rate_max: 0.9

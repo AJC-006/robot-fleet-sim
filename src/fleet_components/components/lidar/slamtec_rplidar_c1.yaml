@@ -1,0 +1,45 @@
+model: Slamtec RPLIDAR C1
+category: lidar
+vendor: Slamtec
+datasheet: https://cdn.shopify.com/s/files/1/0058/3145/8904/files/SLAMTEC_rplidar_datasheet_C1_v1.1_en.pdf
+sources:
+  - {url: https://github.com/Slamtec/sllidar_ros2, used_for: "driver node source (src/sllidar_node.cpp): topic, QoS, angle_compensate binning, frame_id default, range_min, scan_time, REP-117 inf"}
+specs:                                  # datasheet v1.1, converted to SI
+  range_min: 0.05                       # m
+  range_max_white: 12.0                 # m @ 70 % reflectivity
+  range_max_black: 6.0                  # m @ 10 % reflectivity
+  sample_rate: 5000                     # samples/s (5 kHz)
+  scan_rate_hz: 10.0                    # 8-12 Hz range, 10 Hz typical
+  angular_resolution_deg: 0.72          # at 10 Hz
+  accuracy: 0.030                       # m, "+-30 mm" (no statistical definition published)
+  resolution: 0.015                     # m
+  mass: 0.110                           # kg
+  size: [0.0556, 0.0556, 0.0413]        # m, datasheet v1.1 fig. 4-1 (base 55.6 x 55.6, height 41.3)
+  scan_plane_height: 0.0298             # m above the base bottom (fig. 4-1 'laser receiving and emitting height' 29.8)
+  supply_voltage: 5.0                   # V (datasheet), UART 460800 baud
+  wavelength_nm: 905                    # laser class 1
+ros_driver:
+  package: sllidar_ros2                 # source build, not in Jazzy apt
+  node: sllidar_node
+  parameters: {scan_mode: Standard, angle_compensate: true, frame_id: laser_frame, serial_baudrate: 460800}
+  topics: {scan: sensor_msgs/msg/LaserScan}
+  frame_id: laser_frame
+  rate_hz: 10
+  qos: {reliability: reliable, durability: volatile, history: keep_last, depth: 10}   # rclcpp::QoS(KeepLast(10)), sllidar_node.cpp
+sim:
+  gz_sensor: gpu_lidar
+  samples_per_rev: 500                  # = sample_rate / scan_rate_hz
+  update_rate: 10
+  range_min: 0.05
+  range_max: 12.0                       # Standard mode, white target; reflectivity dependence is not modelled
+  range_noise_stddev: 0.010             # m; ASSUMPTION: the +-30 mm accuracy is read as 3 sigma = 30/3
+  range_quantisation: 0.00025           # m; driver reports dist_mm_q2/4 mm (1/4 mm units)
+  output_bins: 720                      # multiple = int(points_per_circle/360 + 1) = int(500/360 + 1) = 2 -> 360 * 2
+  angle_compensate_multiple: 2
+  # sensor frame: ROS angle = pi - device angle (driver reverses the clockwise device scan)
+limitations: >-
+  Accuracy +-30 mm has no published statistical definition (taken as 3 sigma). Range depends on target
+  reflectivity (12 m white, 6 m black) but gz returns geometry only, so range_max is the white-target
+  value. Intensities are not modelled (the driver publishes quality>>2; the adapter fills zeros). No
+  motion distortion: gz casts all rays at one instant; the stamp is the start of the revolution as in
+  the driver. Sunlight (40 klux) effects, multipath and mixed pixels are not modelled.

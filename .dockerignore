@@ -1,0 +1,5 @@
+# The image holds only the dependencies; docker/run.sh mounts the workspace. The build needs nothing but the
+# package.xml files (for rosdep) and the apt list, so the context stays a few kB and code edits keep the cache.
+*
+!src/**/package.xml
+!scripts/install_deps.sh

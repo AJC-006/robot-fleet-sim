@@ -1,0 +1,38 @@
+model: ROBOTIS DYNAMIXEL XM430-W210-R
+category: servo
+vendor: ROBOTIS
+datasheet: https://emanual.robotis.com/docs/en/dxl/x/xm430-w210/
+sources:
+  - {url: https://github.com/ROBOTIS-GIT/dynamixel_hardware_interface, used_for: "ros2_control driver (jazzy branch)"}
+specs:
+  mass: 0.082                           # kg
+  size: [0.0285, 0.0465, 0.034]         # m (W x H x D), e-manual
+  gear_ratio: 212.6
+  resolution_pulses_per_rev: 4096
+  input_voltage: [10.0, 14.8]           # V, recommended 12
+  stall_torque: {11.1: 2.7, 12.0: 3.0, 14.8: 3.7}      # N m at voltage (V)
+  stall_current: {11.1: 2.1, 12.0: 2.3, 14.8: 2.7}     # A
+  no_load_speed_rpm: {11.1: 70, 12.0: 77, 14.8: 95}
+  velocity_unit_rpm: 0.229
+  current_unit_a: 0.00269
+  pwm_limit_default: 885
+  velocity_limit_default: 330           # units of 0.229 rpm
+  current_limit_default: 1193           # units of 2.69 mA
+  position_pid_default: {P: 800, I: 0, D: 0}   # KPP = P/128, KPI = I/65536, KPD = D/16 (e-manual)
+sim:
+  # model at 12 V: R = V / I_stall, keN = V / w0, kt_out = stall torque / stall current
+  resistance: 5.22                      # ohm = 12 / 2.3
+  back_emf_constant: 1.488              # V s/rad = 12 / (77 rpm * 2 pi / 60)
+  torque_constant: 1.304                # N m/A = 3.0 / 2.3
+  position_resolution: 1.534e-3         # rad = 2 pi / 4096
+unpublished:
+  rotor_inertia: "unpublished"
+  firmware_loop_rate: "unpublished"
+  backlash: "unpublished (e-manual says gear backlash exists, value not given)"
+limitations: >-
+  Stall rating differs from the continuous output; the vendor graph is closer to real behaviour (G4
+  digitises it). No thermal model or overload shutdown until G4.
+ros_driver:
+  package: dynamixel_hardware_interface
+  command_interfaces: [position]
+  state_interfaces: [position, velocity, effort]

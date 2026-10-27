@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- IMU/AHRS from the catalog (components/imu/<model>.yaml). White noise, turn-on bias and Gauss-Markov bias
+       from sim.* (derivations in the catalog entry; tools/imu_noise_params.py). The orientation reference is
+       ENU (REP-103). gz_topic carries the raw gz IMU message, adapted by imu_driver_sim into imu/data_raw and
+       imu/data. -->
+  <xacro:include filename="$(find fleet_components)/urdf/common.xacro"/>
+  <xacro:macro name="imu" params="model parent xyz rpy:='0 0 0' frame:=imu_link gz_topic:=gz/imu">
+    <xacro:property name="c" value="${xacro.load_yaml(comp_dir + '/imu/' + model + '.yaml')}"/>
+    <xacro:property name="sz" value="${c['specs']['size']}"/>
+    <xacro:property name="sm" value="${c['sim']}"/>
+    <link name="${frame}">
+      <xacro:box_inertial m="${c['specs']['mass']}" x="${sz[0]}" y="${sz[1]}" z="${sz[2]}"/>
+    </link>
+    <joint name="${frame}_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${frame}"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+    </joint>
+    <gazebo reference="${frame}">
+      <sensor name="imu" type="imu">
+        <pose>0 0 0 0 0 0</pose>
+        <topic>${gz_topic}</topic>
+        <gz_frame_id>${frame}</gz_frame_id>
+        <update_rate>${sm['update_rate']}</update_rate>
+        <always_on>true</always_on>
+        <visualize>false</visualize>
+        <imu>
+          <orientation_reference_frame>
+            <localization>ENU</localization>
+          </orientation_reference_frame>
+          <angular_velocity>
+            <xacro:imu_noise std="${sm['gyro_noise_stddev']}" bias="${sm['gyro_turn_on_bias_stddev']}"
+                             dyn="${sm['gyro_bias_dynamic_stddev']}" ctime="${sm['bias_correlation_time']}"/>
+          </angular_velocity>
+          <linear_acceleration>
+            <xacro:imu_noise std="${sm['accel_noise_stddev']}" bias="${sm['accel_turn_on_bias_stddev']}"
+                             dyn="${sm['accel_bias_dynamic_stddev']}" ctime="${sm['bias_correlation_time']}"/>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:macro name="imu_noise" params="std bias dyn ctime">
+    <x><noise type="gaussian"><mean>0.0</mean><stddev>${std}</stddev><bias_mean>0.0</bias_mean><bias_stddev>${bias}</bias_stddev><dynamic_bias_stddev>${dyn}</dynamic_bias_stddev><dynamic_bias_correlation_time>${ctime}</dynamic_bias_correlation_time></noise></x>
+    <y><noise type="gaussian"><mean>0.0</mean><stddev>${std}</stddev><bias_mean>0.0</bias_mean><bias_stddev>${bias}</bias_stddev><dynamic_bias_stddev>${dyn}</dynamic_bias_stddev><dynamic_bias_correlation_time>${ctime}</dynamic_bias_correlation_time></noise></y>
+    <z><noise type="gaussian"><mean>0.0</mean><stddev>${std}</stddev><bias_mean>0.0</bias_mean><bias_stddev>${bias}</bias_stddev><dynamic_bias_stddev>${dyn}</dynamic_bias_stddev><dynamic_bias_correlation_time>${ctime}</dynamic_bias_correlation_time></noise></z>
+  </xacro:macro>
+</robot>

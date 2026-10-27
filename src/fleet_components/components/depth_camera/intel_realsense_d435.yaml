@@ -1,0 +1,59 @@
+model: Intel RealSense D435
+category: depth_camera
+vendor: Intel (RealSense)
+datasheet: https://www.realsenseai.com/wp-content/uploads/2020/06/Intel-RealSense-D400-Series-Datasheet-June-2020.pdf   # 337029-009
+sources:
+  - {url: https://github.com/IntelRealSense/realsense-ros, used_for: "driver topics, camera_name/camera_namespace defaults (camera/camera), <stream>_qos parameter (default SYSTEM_DEFAULT), 16UC1 depth"}
+  - {url: https://dev.intelrealsense.com/docs/tuning-depth-cameras-for-best-performance, used_for: "depth RMS error model: sigma_z = z^2 * subpixel / (fx * baseline), subpixel 0.08 px (typical)"}
+specs:
+  baseline: 0.050                       # m
+  depth_hfov_deg: 87.0                  # +-3, HD 1280x720
+  depth_vfov_deg: 58.0                  # +-1
+  depth_imager_focal_length: 0.00193    # m
+  depth_shutter: global
+  depth_min_z: {"1280x720": 0.280, "848x480": 0.195, "640x480": 0.175}   # m (datasheet table "Min-Z")
+  depth_z_accuracy_pct: 2.0             # <= 2 % of distance (up to 2 m, 80 % ROI, HD)
+  depth_rms_spatial_noise_pct: 2.0      # <= 2 %  (spatial noise)
+  depth_temporal_noise_pct: 1.0         # <= 1 %
+  depth_max_range_m: 10.0               # ideal operating range upper end (datasheet 0.3-3 m typical; stereo data up to ~10 m)
+  color_sensor: OmniVision OV2740
+  color_hfov_deg: 69.4                  # Table 3-16
+  color_vfov_deg: 42.5
+  color_diagonal_fov_deg: 77.0
+  color_focal_length: 0.00188           # m
+  color_shutter: rolling
+  color_distortion_pct: 1.5             # <= 1.5 % (distortion coefficients not published; camera_info D is zero in the sim)
+  fps_max: 90
+  mass: 0.072                           # kg (68.4-75.6)
+  size: [0.090, 0.025, 0.025]           # m
+ros_driver:
+  package: realsense2_camera            # ros-jazzy-realsense2-camera, camera_name:=camera camera_namespace:=camera
+  parameters: {depth_module.depth_profile: "848x480x30", rgb_camera.color_profile: "640x360x30", camera_name: camera, camera_namespace: camera}
+  topics:
+    camera/camera/color/image_raw: sensor_msgs/msg/Image             # rgb8
+    camera/camera/color/camera_info: sensor_msgs/msg/CameraInfo
+    camera/camera/depth/image_rect_raw: sensor_msgs/msg/Image        # 16UC1, millimetres, 0 = invalid
+    camera/camera/depth/camera_info: sensor_msgs/msg/CameraInfo
+  frame_id: {base: camera_link, color: camera_color_optical_frame, depth: camera_depth_optical_frame}
+  rate_hz: 30
+  qos: SYSTEM_DEFAULT                   # <stream>_qos default per the README: reliable, volatile, keep_last 10
+sim:
+  gz_sensors: {color: camera, depth: depth_camera}   # one sensor each, because the two profiles have different resolutions
+  color: {width: 640, height: 360, rate: 30, hfov_rad: 1.211259}      # 69.4 deg
+  depth: {width: 848, height: 480, rate: 30, hfov_rad: 1.51844}      # 87.0 deg
+  # intrinsics (pinhole, square pixels, principal point at the image centre, zero distortion):
+  #   fx = (W/2) / tan(HFOV/2)
+  color_fx: 462.14                      # 320 / tan(34.7 deg)
+  depth_fx: 446.8                       # 424 / tan(43.5 deg)
+  depth_noise_subpixel: 0.08            # px, Intel tuning guide typical
+  # sigma_z(z) = z^2 * 0.08 / (446.8 * 0.050) = 3.581e-3 * z^2   (14.3 mm at 2 m = 0.72 %, inside the 2 % spec)
+  depth_clip_near: 0.195                # m: below Min-Z at 848x480 the device returns 0
+  depth_clip_far: 10.0
+  depth_quantisation: 0.001             # m, 16UC1 millimetres
+limitations: >-
+  Stereo-specific artefacts are not modelled (occlusion shadows from the baseline, holes on textureless or
+  reflective surfaces, edge fly-aways, IR projector range loss in sunlight); depth is a rendered z-buffer
+  with a z-dependent Gaussian error. Color is rolling shutter in hardware, global in the render. Lens
+  distortion (<= 1.5 %) coefficients are unpublished, so the simulated camera_info reports zeros.
+  Colour and depth frames are co-located (the real ~15 mm colour/depth extrinsics come from device
+  calibration, not the datasheet). Auto-exposure is not modelled.

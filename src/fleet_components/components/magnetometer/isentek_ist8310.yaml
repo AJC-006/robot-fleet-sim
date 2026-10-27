@@ -1,0 +1,28 @@
+model: iSentek IST8310 3-axis magnetometer (Pixhawk 6C internal and Holybro GPS module compass)
+category: magnetometer
+vendor: iSentek
+datasheet: https://www.isentek.com/userfiles/DS-IST-8310_V1.5.pdf   # IST8310 datasheet v1.5, local copy used
+sources:
+  - {path: src/drivers/magnetometer/isentek/ist8310/IST8310.cpp and iSentek_IST8310_registers.hpp (PX4 v1.18.0-beta1), used_for: "PX4 uses single measurement with 16x averaging, 16-bit output (1320 LSB/gauss), one read every 20 ms -> ~50 Hz"}
+specs:
+  resolution: 3.0e-7                    # T/LSB = 0.3 uT/LSB (datasheet RESO, 14-bit mode); PX4 16-bit mode: 1/1320 G = 7.576e-8 T/LSB
+  zero_gauss_offset_rms: 3.0e-7         # T = +-0.3 uT RMS (datasheet ZGD)
+  range_xy: 1.6e-3                      # T (+-1600 uT); z +-2500 uT
+  linearity_x: 0.015                    # %FS max 1.5 (x), 0.5 (y,z)
+  noise_rms: unpublished                # not in the datasheet text; estimate used: 0.3 uT (1 LSB of the 14-bit mode)
+ros_driver:
+  package: PX4 on-board driver ist8310 (uXRCE-DDS)
+  topics: {}                            # no default DDS topic for vehicle_magnetometer in this PX4 checkout
+  frame_id: none
+  rate_hz: 50
+  qos: PX4 uXRCE-DDS default
+sim:
+  gz_sensor: magnetometer               # PX4 reads .../sensor/magnetometer_sensor/magnetometer (tesla, FLU, see notes)
+  update_rate: 50
+  stddev: 3.0e-7                        # T, ESTIMATE (noise unpublished)
+  precision: 7.576e-8                   # T, PX4 16-bit configuration, gaussian_quantized
+  bias_stddev: 3.0e-7                   # T, ZGD is stated as an RMS value -> 1 sigma
+limitations: >-
+  Hard-iron and soft-iron distortion, motor/ESC current interference (the dominant real error on a
+  multirotor), sensitivity temperature drift (0.016 %/K) and cross-axis terms are not modelled; the
+  turn-on offset is constant per run. White noise is an estimate because the datasheet has no noise figure.

@@ -1,0 +1,367 @@
+# Single source of truth for the robots (see docs/ARCHITECTURE.md for the wheeled schema; the legged
+# schema is described above the first `kind: legged` entry below).
+# Read by: xacro (urdf/robot.urdf.xacro), blender/build_robots.py, fleet_bringup launch.
+# body.*  : free-form, used by Blender and the xacro:
+#   wheel_style           wheel mesh generator (blender/robots/parts.py)
+#   com, inertia_box      LEGGED ONLY: centre and outer size of the body shell box (budget input)
+#   (wheeled robots: mass, CoM and inertia come from config/mass_properties.yaml, see tools/mass_properties.py)
+#   (wheel friction: sim.mu of the `tyre` component in the catalog, applied by urdf/wheel.xacro; DART takes min(tyre, floor) per
+#                         contact, so the floor's cited rubber/floor pair value governs where it is lower;
+#                         the CoulombFriction world plugin turns DART's box into a cone). docs/notes/ground.md G2
+#   collisions            primitives in the base_link frame (z up from the axle, ground = -wheel_radius)
+# lidar/imu/camera x,y,z are in base_footprint (z above ground); which product sits there is `components:`.
+# components.<role>: file stem of the catalog entry. Roles: lidar (category lidar), imu (imu), camera
+#   (depth_camera), wheel_motor (dc_motor), motor_driver, battery_cell (battery), tyre | joint_actuators
+#   {coxa, femur, tibia} (servo). battery_pack {series, parallel}. mounts: see each robot.
+
+round:
+  label: "Pebble (round)"
+  # components: catalog entries (src/fleet_components/components/<category>/<name>.yaml) picked by file
+  # stem; swapping a sensor or motor means changing one name here. Masses, inertia and CoM are an OUTPUT of
+  # tools/mass_properties.py (config/mass_properties.yaml), not inputs.
+  components:
+    lidar: slamtec_rplidar_c1
+    imu: microstrain_3dm_cv7_ahrs
+    camera: intel_realsense_d435
+    wheel_motor: pololu_37d_12v_50to1_64cpr
+    motor_driver: basicmicro_roboclaw_2x15a
+    battery_cell: samsung_inr18650_35e
+    tyre: rubber_on_concrete
+  battery_pack: {series: 3, parallel: 1}
+  # base_link-frame positions (m) of the pack and of the first driver (further drivers every 0.08 m along x):
+  # layout choices of this model, the CoM follows
+  mounts: {battery: [0.0, 0.0, 0.02], driver: [-0.06, 0.0, 0.045]}
+  wheel_radius: 0.035
+  wheel_width: 0.022
+  wheel_separation: 0.23
+  # source: G2 bench (docs/notes/ground.md): sphere tyre contact + CoulombFriction gives yaw ratio
+  # 1.000 at the geometric wheel_separation (the old 0.9/0.86 compensated cylinder-contact artefacts)
+  wheel_separation_multiplier: 1.0
+  left_wheels: [left_wheel]
+  right_wheels: [right_wheel]
+  wheel_x: [0.0]
+  casters:
+    - {name: front, x: 0.10, y: 0.0, radius: 0.015}
+    - {name: rear, x: -0.10, y: 0.0, radius: 0.015}
+  body:
+    wheel_style: pebble
+    # source: Engineering ToolBox, friction coefficients, "Tire, dry / Road, dry" 1.0 and "Rubber / Dry
+    # Asphalt" static 0.9 (engineeringtoolbox.com/friction-coefficients-d_778.html): upper bound of the
+    # tyre/floor pairs; floors carry their own lower pair values. G3/G5 replace it with the tyre product.
+    collisions:
+      - {shape: cylinder, radius: 0.14, length: 0.075, xyz: [0.0, 0.0, 0.0275]}
+  lidar: {x: 0.0, y: 0.0, z: 0.17}
+  imu: {x: 0.0, y: 0.0, z: 0.06}
+  camera: {x: 0.143, y: 0.0, z: 0.075, pitch: 0.0}
+  footprint: [[0.158, 0.058], [0.063, 0.153], [-0.063, 0.153], [-0.153, 0.063], [-0.153, -0.063], [-0.063, -0.153], [0.063, -0.153], [0.158, -0.058]]
+  robot_radius: 0.158
+  max_vel_x: 0.5
+  max_vel_theta: 2.0
+  height: 0.19
+
+box:
+  label: "Brick (box)"
+  # components: catalog entries (src/fleet_components/components/<category>/<name>.yaml) picked by file
+  # stem; swapping a sensor or motor means changing one name here. Masses, inertia and CoM are an OUTPUT of
+  # tools/mass_properties.py (config/mass_properties.yaml), not inputs.
+  components:
+    lidar: slamtec_rplidar_c1
+    imu: microstrain_3dm_cv7_ahrs
+    camera: intel_realsense_d435
+    wheel_motor: pololu_37d_12v_70to1_64cpr
+    motor_driver: basicmicro_roboclaw_2x15a
+    battery_cell: samsung_inr18650_35e
+    tyre: rubber_on_concrete
+  battery_pack: {series: 3, parallel: 2}
+  # base_link-frame positions (m) of the pack and of the first driver (further drivers every 0.08 m along x):
+  # layout choices of this model, the CoM follows
+  mounts: {battery: [0.03, 0.0, 0.02], driver: [-0.06, 0.0, 0.045]}
+  wheel_radius: 0.05
+  wheel_width: 0.04
+  wheel_separation: 0.28
+  # source: G2 bench (docs/notes/ground.md): sphere tyre contact + CoulombFriction gives yaw ratio
+  # 1.000 at the geometric wheel_separation (the old 0.9/0.86 compensated cylinder-contact artefacts)
+  wheel_separation_multiplier: 1.0
+  left_wheels: [left_wheel]
+  right_wheels: [right_wheel]
+  wheel_x: [0.0]
+  casters:
+    - {name: front, x: 0.14, y: 0.0, radius: 0.02}
+  body:
+    wheel_style: brick
+    # source: Engineering ToolBox, friction coefficients, "Tire, dry / Road, dry" 1.0 and "Rubber / Dry
+    # Asphalt" static 0.9 (engineeringtoolbox.com/friction-coefficients-d_778.html): upper bound of the
+    # tyre/floor pairs; floors carry their own lower pair values. G3/G5 replace it with the tyre product.
+    collisions:
+      - {shape: box, size: [0.32, 0.24, 0.09], xyz: [0.02, 0.0, 0.045]}
+  lidar: {x: -0.04, y: 0.0, z: 0.30}
+  imu: {x: 0.0, y: 0.0, z: 0.08}
+  camera: {x: 0.19, y: 0.0, z: 0.115, pitch: 0.0}
+  footprint: [[0.209, 0.122], [0.153, 0.178], [-0.113, 0.178], [-0.175, 0.116], [-0.175, -0.116], [-0.113, -0.177], [0.153, -0.178], [0.209, -0.122]]
+  robot_radius: 0.239
+  max_vel_x: 0.5
+  max_vel_theta: 2.0
+  height: 0.33
+
+rover:
+  label: "Mars rover (rocker-bogie)"
+  # components: catalog entries (src/fleet_components/components/<category>/<name>.yaml) picked by file
+  # stem; swapping a sensor or motor means changing one name here. Masses, inertia and CoM are an OUTPUT of
+  # tools/mass_properties.py (config/mass_properties.yaml), not inputs.
+  components:
+    lidar: slamtec_rplidar_s2
+    imu: microstrain_3dm_cv7_ahrs
+    camera: intel_realsense_d435
+    wheel_motor: pololu_37d_12v_70to1_64cpr
+    motor_driver: basicmicro_roboclaw_2x15a
+    battery_cell: samsung_inr18650_35e
+    tyre: rubber_on_concrete
+  battery_pack: {series: 3, parallel: 2}
+  # base_link-frame positions (m) of the pack and of the first driver (further drivers every 0.08 m along x):
+  # layout choices of this model, the CoM follows
+  mounts: {battery: [0.0, 0.0, 0.03], driver: [-0.08, 0.0, 0.07]}
+  wheel_radius: 0.055
+  wheel_width: 0.05
+  wheel_separation: 0.34
+  # derivation: skid-steer effective track = wheel_separation / yaw ratio; G2 bench spin at 1 rad/s,
+  # DART + CoulombFriction, isotropic mu: yaw ratio 0.8101 -> 1/0.8101. G5 checks it against the analysis.
+  wheel_separation_multiplier: 1.234
+  left_wheels: [left_front_wheel, left_mid_wheel, left_rear_wheel]
+  right_wheels: [right_front_wheel, right_mid_wheel, right_rear_wheel]
+  wheel_x: [0.18, 0.0, -0.18]
+  casters: []
+  body:
+    wheel_style: rover
+    # source: Engineering ToolBox, friction coefficients, "Tire, dry / Road, dry" 1.0 and "Rubber / Dry
+    # Asphalt" static 0.9 (engineeringtoolbox.com/friction-coefficients-d_778.html): upper bound of the
+    # tyre/floor pairs; floors carry their own lower pair values. G3/G5 replace it with the tyre product.
+    collisions:
+      - {shape: box, size: [0.30, 0.22, 0.08], xyz: [0.0, 0.0, 0.105]}
+  lidar: {x: 0.10, y: 0.0, z: 0.43}
+  imu: {x: 0.0, y: 0.0, z: 0.14}
+  camera: {x: 0.14, y: 0.0, z: 0.35, pitch: 0.12}
+  footprint: [[0.244, 0.198], [0.237, 0.205], [-0.237, 0.205], [-0.247, 0.195], [-0.248, -0.195], [-0.237, -0.205], [0.237, -0.205], [0.244, -0.198]]
+  robot_radius: 0.314
+  max_vel_x: 0.4
+  max_vel_theta: 1.5
+  height: 0.46
+
+truck:
+  label: "Truck (pickup)"
+  # components: catalog entries (src/fleet_components/components/<category>/<name>.yaml) picked by file
+  # stem; swapping a sensor or motor means changing one name here. Masses, inertia and CoM are an OUTPUT of
+  # tools/mass_properties.py (config/mass_properties.yaml), not inputs.
+  components:
+    lidar: slamtec_rplidar_s2
+    imu: microstrain_3dm_cv7_ahrs
+    camera: intel_realsense_d435
+    wheel_motor: pololu_37d_12v_70to1_64cpr
+    motor_driver: basicmicro_roboclaw_2x15a
+    battery_cell: samsung_inr18650_35e
+    tyre: rubber_on_concrete
+  battery_pack: {series: 3, parallel: 2}
+  # base_link-frame positions (m) of the pack and of the first driver (further drivers every 0.08 m along x):
+  # layout choices of this model, the CoM follows
+  mounts: {battery: [0.0, 0.0, 0.03], driver: [-0.08, 0.0, 0.07]}
+  wheel_radius: 0.07
+  wheel_width: 0.065
+  wheel_separation: 0.34
+  # derivation: skid-steer effective track = wheel_separation / yaw ratio; G2 bench spin at 1 rad/s,
+  # DART + CoulombFriction, isotropic mu: yaw ratio 0.5303 -> 1/0.5303. G5 checks it against the analysis.
+  wheel_separation_multiplier: 1.886
+  left_wheels: [left_front_wheel, left_rear_wheel]
+  right_wheels: [right_front_wheel, right_rear_wheel]
+  wheel_x: [0.16, -0.16]
+  casters: []
+  body:
+    wheel_style: truck
+    # source: Engineering ToolBox, friction coefficients, "Tire, dry / Road, dry" 1.0 and "Rubber / Dry
+    # Asphalt" static 0.9 (engineeringtoolbox.com/friction-coefficients-d_778.html): upper bound of the
+    # tyre/floor pairs; floors carry their own lower pair values. G3/G5 replace it with the tyre product.
+    collisions:
+      - {shape: box, size: [0.46, 0.26, 0.07], xyz: [0.0, 0.0, 0.085]}
+      - {shape: box, size: [0.15, 0.24, 0.07], xyz: [0.025, 0.0, 0.155]}
+  lidar: {x: 0.025, y: 0.0, z: 0.31}
+  imu: {x: 0.0, y: 0.0, z: 0.12}
+  camera: {x: 0.115, y: 0.0, z: 0.23, pitch: 0.05}
+  footprint: [[0.272, 0.198], [0.250, 0.220], [-0.250, 0.220], [-0.266, 0.204], [-0.266, -0.204], [-0.250, -0.220], [0.250, -0.220], [0.272, -0.198]]
+  robot_radius: 0.333
+  max_vel_x: 0.6
+  max_vel_theta: 2.0
+  height: 0.33
+
+# ---------------------------------------------------------------------------------------------------
+# Legged robots (kind: legged). Kinematics: src/fleet_legged/fleet_legged/kinematics.py.
+#   leg_type        yaw  = sprawling leg, coxa axis z rotated by the leg's mount_yaw_deg (wyrm, spider)
+#                   roll = mammal leg, coxa axis x (hip ab/ad), femur joint `coxa` metres to the side (hound)
+#   knee            +1 knee up (q_tibia > 0), -1 knee back (q_tibia < 0)
+#   standing_height base_link height above the floor while standing (base_footprint -> base_link z)
+#   crouch_height   body height at spawn; the gait node raises it to standing_height
+#   link            coxa/femur/tibia lengths, foot_radius (foot sphere centre at the tibia end) and
+#                   *_radius of the collision/inertia cylinders
+#   (link masses, CoM and inertia: config/mass_properties.yaml, from the servo catalog entries + structure)
+#   joint           effort (N m, also the Gazebo servo force limit), velocity (rad/s), damping, friction
+#   limits          [lo, hi] rad per joint type; roll-leg coxa limits are mirrored on the right side
+#   legs            name, hip [x,y,z] in base_link, mount_yaw_deg (yaw legs), foot [x,y] nominal stance
+#   gait            type (trot | creep | wave | tetrapod), period s, duty (stance fraction), step_height m,
+#                   offsets (phase per leg, same order as legs), max_reach (m, swing-target clamp),
+#                   odom_scale [sx, sy] leg-odometry calibration (Gazebo ground truth / leg odometry from
+#                   walk_test.py; the round feet roll and slip, so the raw stance-foot fit reads short)
+#   body            com, inertia_box, collisions (box | cylinder | sphere, optional rpy; base_link frame,
+#                   z = 0 at the body centre, floor at -standing_height), foot_mu (isotropic, same convention as the tyre mu)
+#   lidar/imu/camera x,y,z with z above the floor while standing
+#   footprint       swept stance envelope (feet at max speed + body/head/tail) + 1 cm, in base_footprint
+#                   (ros2 run fleet_legged envelope.py <robot> prints it)
+
+wyrm:
+  label: "Wyrm (dragon hatchling)"
+  components:
+    lidar: slamtec_rplidar_c1
+    imu: microstrain_3dm_cv7_ahrs
+    camera: intel_realsense_d435
+    joint_actuators: {coxa: robotis_xm430_w210, femur: robotis_xh540_w150, tibia: robotis_xm430_w210}
+    battery_cell: samsung_inr18650_35e
+  battery_pack: {series: 3, parallel: 2}
+  # base_link-frame position of the pack (layout choice of this model)
+  mounts: {battery: [0.0, 0.0, -0.01]}
+  kind: legged
+  leg_type: yaw
+  knee: 1
+  standing_height: 0.14
+  crouch_height: 0.09
+  link: {coxa: 0.035, femur: 0.10, tibia: 0.115, foot_radius: 0.018, coxa_radius: 0.022, femur_radius: 0.018, tibia_radius: 0.013}
+  joint: {effort: 6.0, velocity: 16.0, damping: 0.02, friction: 0.0}
+  limits:
+    coxa: [-0.75, 0.75]
+    femur: [-1.3, 1.0]
+    tibia: [0.2, 2.6]
+  legs:
+    - {name: lf, hip: [0.11, 0.06, -0.01], mount_yaw_deg: 57, foot: [0.19, 0.185]}
+    - {name: rf, hip: [0.11, -0.06, -0.01], mount_yaw_deg: -57, foot: [0.19, -0.185]}
+    - {name: lh, hip: [-0.11, 0.06, -0.01], mount_yaw_deg: 123, foot: [-0.19, 0.185]}
+    - {name: rh, hip: [-0.11, -0.06, -0.01], mount_yaw_deg: -123, foot: [-0.19, -0.185]}
+  gait: {type: trot, period: 0.6, duty: 0.6, step_height: 0.035, offsets: [0.0, 0.5, 0.5, 0.0], max_reach: 0.05,
+         odom_scale: [1.03, 1.03]}
+  body:
+    com: [0.0, 0.0, 0.0]
+    inertia_box: [0.36, 0.14, 0.09]
+    # base_link xy hull of the visual (head, snout, body, folded wings, tail curled to the right) + 5 mm,
+    # added to the footprint
+    outline: [[0.327, 0.0], [0.318, 0.019], [0.253, 0.059], [0.16, 0.068], [0.057, 0.075], [-0.146, 0.078], [-0.287, 0.019], [-0.334, -0.016], [-0.358, -0.07], [-0.351, -0.122], [-0.329, -0.152], [-0.299, -0.167], [0.253, -0.059], [0.308, -0.026]]
+    # source: as the tyre mu (rubber foot cap; upper bound of the rubber/floor pairs, floors govern)
+    foot_mu: 1.0
+    collisions:
+      - {shape: box, size: [0.30, 0.13, 0.075], xyz: [-0.01, 0.0, 0.005]}
+      - {shape: sphere, radius: 0.045, xyz: [0.215, 0.0, 0.03]}
+  lidar: {x: -0.03, y: 0.0, z: 0.27}
+  imu: {x: 0.0, y: 0.0, z: 0.14}
+  camera: {x: 0.27, y: 0.0, z: 0.19, pitch: 0.15}
+  footprint: [[-0.361, -0.126], [-0.336, -0.159], [-0.238, -0.225], [-0.174, -0.249], [0.168, -0.255], [0.252, -0.226], [0.338, 0.000], [0.246, 0.222], [0.174, 0.249], [-0.168, 0.254], [-0.258, 0.224], [-0.368, -0.069]]
+  robot_radius: 0.382
+  max_vel_x: 0.18
+  max_vel_y: 0.08
+  max_vel_theta: 0.6
+  height: 0.30
+
+hound:
+  label: "Hound (robot dog)"
+  components:
+    lidar: slamtec_rplidar_s2
+    imu: microstrain_3dm_cv7_ahrs
+    camera: intel_realsense_d435
+    joint_actuators: {coxa: robotis_xh540_w150, femur: robotis_xh540_w150, tibia: robotis_xh540_w150}
+    battery_cell: samsung_inr18650_35e
+  battery_pack: {series: 3, parallel: 2}
+  # base_link-frame position of the pack (layout choice of this model)
+  mounts: {battery: [0.0, 0.0, -0.01]}
+  kind: legged
+  leg_type: roll
+  knee: -1
+  standing_height: 0.27
+  crouch_height: 0.17
+  link: {coxa: 0.06, femur: 0.16, tibia: 0.17, foot_radius: 0.022, coxa_radius: 0.035, femur_radius: 0.025, tibia_radius: 0.014}
+  joint: {effort: 14.0, velocity: 25.0, damping: 0.03, friction: 0.0}
+  limits:
+    coxa: [-0.5, 0.6]
+    femur: [0.5, 3.1]
+    tibia: [-2.75, -0.3]
+  legs:
+    # hips biased forward: the hind knees point back and would stick out behind the body
+    - {name: lf, hip: [0.185, 0.06, -0.02], foot: [0.185, 0.12]}
+    - {name: rf, hip: [0.185, -0.06, -0.02], foot: [0.185, -0.12]}
+    - {name: lh, hip: [-0.155, 0.06, -0.02], foot: [-0.155, 0.12]}
+    - {name: rh, hip: [-0.155, -0.06, -0.02], foot: [-0.155, -0.12]}
+  gait: {type: trot, period: 0.45, duty: 0.6, step_height: 0.05, offsets: [0.0, 0.5, 0.5, 0.0], max_reach: 0.07,
+         odom_scale: [1.075, 1.04]}
+  body:
+    com: [0.015, 0.0, 0.0]
+    inertia_box: [0.44, 0.17, 0.10]
+    mirrored_meshes: [coxa, femur]
+    outline: [[0.31, 0.06], [0.215, 0.085], [-0.215, 0.085], [-0.235, 0.04], [-0.235, -0.04], [-0.215, -0.085], [0.215, -0.085], [0.31, -0.06]]
+    # source: as the tyre mu (rubber foot cap; upper bound of the rubber/floor pairs, floors govern)
+    foot_mu: 1.0
+    collisions:
+      - {shape: box, size: [0.42, 0.16, 0.10], xyz: [0.0, 0.0, 0.01]}
+      - {shape: box, size: [0.09, 0.12, 0.08], xyz: [0.255, 0.0, 0.03]}
+  lidar: {x: -0.04, y: 0.0, z: 0.40}
+  imu: {x: 0.0, y: 0.0, z: 0.27}
+  camera: {x: 0.30, y: 0.0, z: 0.31, pitch: 0.1}
+  footprint: [[-0.336, -0.146], [-0.278, -0.171], [-0.141, -0.188], [0.178, -0.189], [0.242, -0.166], [0.320, -0.063], [0.320, 0.063], [0.243, 0.166], [0.176, 0.191], [-0.143, 0.186], [-0.288, 0.168], [-0.338, 0.146]]
+  robot_radius: 0.369
+  max_vel_x: 0.25
+  max_vel_y: 0.12
+  max_vel_theta: 0.7
+  height: 0.43
+
+spider:
+  label: "Spider (octopod)"
+  components:
+    lidar: slamtec_rplidar_c1
+    imu: microstrain_3dm_cv7_ahrs
+    camera: intel_realsense_d435
+    joint_actuators: {coxa: robotis_xm430_w210, femur: robotis_xm430_w210, tibia: robotis_xm430_w210}
+    battery_cell: samsung_inr18650_35e
+  battery_pack: {series: 3, parallel: 2}
+  # base_link-frame position of the pack (layout choice of this model)
+  mounts: {battery: [0.0, 0.0, 0.0]}
+  kind: legged
+  leg_type: yaw
+  knee: 1
+  standing_height: 0.12
+  crouch_height: 0.07
+  link: {coxa: 0.03, femur: 0.125, tibia: 0.19, foot_radius: 0.012, coxa_radius: 0.016, femur_radius: 0.013, tibia_radius: 0.009}
+  joint: {effort: 4.0, velocity: 20.0, damping: 0.01, friction: 0.0}
+  limits:
+    coxa: [-0.65, 0.65]
+    femur: [-1.6, 0.6]
+    tibia: [0.4, 2.9]
+  legs:
+    - {name: l1, hip: [0.0575, 0.0418, 0.0], mount_yaw_deg: 40, foot: [0.20, 0.15]}
+    - {name: l2, hip: [0.0194, 0.0628, 0.0], mount_yaw_deg: 75, foot: [0.07, 0.212]}
+    - {name: l3, hip: [-0.0257, 0.0611, 0.0], mount_yaw_deg: 110, foot: [-0.08, 0.212]}
+    - {name: l4, hip: [-0.0614, 0.0373, 0.0], mount_yaw_deg: 145, foot: [-0.215, 0.14]}
+    - {name: r1, hip: [0.0575, -0.0418, 0.0], mount_yaw_deg: -40, foot: [0.20, -0.15]}
+    - {name: r2, hip: [0.0194, -0.0628, 0.0], mount_yaw_deg: -75, foot: [0.07, -0.212]}
+    - {name: r3, hip: [-0.0257, -0.0611, 0.0], mount_yaw_deg: -110, foot: [-0.08, -0.212]}
+    - {name: r4, hip: [-0.0614, -0.0373, 0.0], mount_yaw_deg: -145, foot: [-0.215, -0.14]}
+  # tetrapod: {l1, l3, r2, r4} and {l2, l4, r1, r3} alternate, 4 feet always down
+  gait: {type: tetrapod, period: 0.5, duty: 0.6, step_height: 0.04, offsets: [0.0, 0.5, 0.0, 0.5, 0.5, 0.0, 0.5, 0.0], max_reach: 0.045,
+         odom_scale: [1.01, 1.02]}
+  body:
+    com: [-0.02, 0.0, 0.01]
+    inertia_box: [0.22, 0.14, 0.07]
+    outline: [[0.105, 0.035], [0.105, -0.035], [-0.18, 0.04], [-0.18, -0.04]]
+    # source: as the tyre mu (rubber foot cap; upper bound of the rubber/floor pairs, floors govern)
+    foot_mu: 1.0
+    collisions:
+      - {shape: cylinder, radius: 0.075, length: 0.06, xyz: [0.0, 0.0, 0.0]}
+      - {shape: sphere, radius: 0.06, xyz: [-0.115, 0.0, 0.025]}
+  lidar: {x: -0.02, y: 0.0, z: 0.30}
+  imu: {x: 0.0, y: 0.0, z: 0.12}
+  camera: {x: 0.08, y: 0.0, z: 0.14, pitch: 0.15}
+  footprint: [[-0.304, -0.108], [-0.276, -0.178], [-0.101, -0.269], [0.044, -0.265], [0.120, -0.256], [0.263, -0.186], [0.266, 0.186], [0.088, 0.268], [-0.055, 0.267], [-0.131, 0.256], [-0.268, 0.180], [-0.304, 0.110]]
+  robot_radius: 0.329
+  max_vel_x: 0.25
+  max_vel_y: 0.15
+  max_vel_theta: 0.8
+  height: 0.33

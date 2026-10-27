@@ -1,0 +1,161 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+    Property Tree Widget:
+      Expanded: ~
+    Tree Height: 520
+  - Class: nav2_rviz_plugins/Navigation 2
+    Name: Navigation 2
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Cell Size: 1
+      Plane Cell Count: 40
+      Color: 120; 110; 140
+      Alpha: 0.3
+    - Class: rviz_default_plugins/Map
+      Name: Map
+      Enabled: true
+      Topic:
+        Value: /map
+        Durability Policy: Transient Local
+        Reliability Policy: Reliable
+        History Policy: Keep Last
+        Depth: 1
+      Color Scheme: map
+      Alpha: 1
+      Draw Behind: true
+    - Class: rviz_default_plugins/Map
+      Name: Global Costmap
+      Enabled: true
+      Topic:
+        Value: /global_costmap/costmap
+        Durability Policy: Transient Local
+        Reliability Policy: Reliable
+        History Policy: Keep Last
+        Depth: 1
+      Color Scheme: costmap
+      Alpha: 0.3
+    - Class: rviz_default_plugins/Map
+      Name: Local Costmap
+      Enabled: true
+      Topic:
+        Value: /local_costmap/costmap
+        Durability Policy: Volatile
+        Reliability Policy: Reliable
+        History Policy: Keep Last
+        Depth: 1
+      Color Scheme: costmap
+      Alpha: 0.6
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Description Source: Topic
+      Description Topic:
+        Value: /robot_description
+        Durability Policy: Transient Local
+        Reliability Policy: Reliable
+        History Policy: Keep Last
+        Depth: 1
+      Visual Enabled: true
+      Collision Enabled: false
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: false
+      Show Names: false
+      Marker Scale: 0.3
+    - Class: rviz_default_plugins/LaserScan
+      Name: LaserScan
+      Enabled: true
+      Topic:
+        Value: /scan
+        Durability Policy: Volatile
+        Reliability Policy: Best Effort
+        History Policy: Keep Last
+        Depth: 5
+      Style: Points
+      Size (Pixels): 3
+      Color Transformer: FlatColor
+      Color: 220; 80; 255
+      Decay Time: 0
+    - Class: rviz_default_plugins/ParticleCloud
+      Name: AMCL Particles
+      Enabled: true
+      Topic:
+        Value: /particle_cloud
+        Durability Policy: Volatile
+        Reliability Policy: Best Effort
+        History Policy: Keep Last
+        Depth: 5
+      Color: 0; 180; 255
+      Shape: Arrow (Flat)
+      Arrow Length: 0.15
+    - Class: rviz_default_plugins/Path
+      Name: Global Plan
+      Enabled: true
+      Topic:
+        Value: /plan
+        Durability Policy: Volatile
+        Reliability Policy: Reliable
+        History Policy: Keep Last
+        Depth: 5
+      Color: 255; 170; 0
+      Line Style: Billboards
+      Line Width: 0.04
+    - Class: rviz_default_plugins/Path
+      Name: Local Plan
+      Enabled: true
+      Topic:
+        Value: /local_plan
+        Durability Policy: Volatile
+        Reliability Policy: Reliable
+        History Policy: Keep Last
+        Depth: 5
+      Color: 0; 255; 140
+      Line Style: Lines
+    - Class: rviz_default_plugins/Polygon
+      Name: Footprint
+      Enabled: true
+      Topic:
+        Value: /local_costmap/published_footprint
+        Durability Policy: Volatile
+        Reliability Policy: Reliable
+        History Policy: Keep Last
+        Depth: 5
+      Color: 255; 60; 200
+  Enabled: true
+  Global Options:
+    Background Color: 24; 18; 32
+    Fixed Frame: map
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Measure
+    - Class: rviz_default_plugins/SetInitialPose
+      Topic:
+        Value: /initialpose
+    - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Value: /goal_pose
+    - Class: nav2_rviz_plugins/GoalTool
+    - Class: rviz_default_plugins/PublishPoint
+      Topic:
+        Value: /clicked_point
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/TopDownOrtho
+      Name: Current View
+      Scale: 40
+      X: 0
+      Y: 0
+      Target Frame: <Fixed Frame>
+    Saved: ~
+Window Geometry:
+  Width: 1366
+  Height: 740

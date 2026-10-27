@@ -1,0 +1,8 @@
+# water-level reference and waypoints for the deep test tank (worlds/tank.sdf: surface z = 0, bed z = -20, column at (10, 0))
+water_level: 0.0
+spawn: {x: 0, y: 0, z: -3, yaw: 0}
+waypoints:
+  - {name: a, x: 8, y: 6, z: -6}
+  - {name: b, x: 16, y: 0, z: -9}
+  - {name: c, x: 8, y: -6, z: -6}
+  - {name: d, x: 0, y: 0, z: -3}

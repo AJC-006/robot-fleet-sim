@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>fleet_marine_plugins</name>
+  <version>0.1.0</version>
+  <description>Gazebo (gz-sim 8) system plugins for underwater vehicles: T200-class thruster driven by ESC PWM
+    with a vendor performance table, bus voltage and identified dynamics, and a Li-ion battery pack model.</description>
+  <maintainer email="65161979+AJC-006@users.noreply.github.com">Alan</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>gz_sim_vendor</depend>
+  <depend>gz_plugin_vendor</depend>
+  <depend>gz_math_vendor</depend>
+  <depend>gz_msgs_vendor</depend>
+  <depend>gz_transport_vendor</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_cmake_cpplint</test_depend>
+  <test_depend>ament_cmake_lint_cmake</test_depend>
+  <test_depend>ament_cmake_xmllint</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

@@ -1,0 +1,38 @@
+model: Blue Robotics Lithium-ion Battery 14.8 V 18 Ah (BATTERY-LI-4S-18AH-R3)
+category: battery
+vendor: Blue Robotics
+datasheet: https://bluerobotics.com/store/comm-control-power/batteries/battery-li-4s-18ah-r3
+sources:
+  - {url: https://bluerobotics.com/store/comm-control-power/batteries/battery-li-4s-18ah-r3, used_for: "configuration, capacity, current limits, dimensions, mass"}
+  - {url: https://old.nkon.nl/sk/k/30q-specs.pdf, used_for: "Samsung INR18650-30Q cell: 3.6 V nominal, 4.20 V charge, 2.5 V cut-off, AC impedance <= 26 mOhm (1 kHz)"}
+  - {url: "https://endless-sphere.com/forums/viewtopic.php?p=1471788", used_for: "measured cell DC resistance 16.0 +/- 0.7 mOhm at 3 A, full charge (third-party measurement)"}
+specs:
+  configuration: 4S6P Samsung INR18650-30Q
+  voltage_nominal: 14.8                 # V
+  voltage_min: 12.0                     # V  (vendor minimum)
+  voltage_max: 16.8                     # V  (4 x 4.20 V cell charge voltage)
+  capacity: 18.0                        # Ah
+  energy: 266.4                         # Wh
+  current_continuous: 60.0              # A
+  current_burst_10s: 132.0              # A
+  charge_current_max: 20.0              # A
+  diameter: 0.0742                      # m
+  length: 0.146                         # m
+  mass: 1.152                           # kg
+  connector: XT90S
+  cell_dc_resistance: 0.016             # ohm (third-party measurement; vendor publishes only AC <= 0.026 ohm)
+ros_driver:
+  package: mavros (via autopilot power module) or any power-monitor node
+  topics: {battery: sensor_msgs/msg/BatteryState}
+  frame_id: battery_link
+  rate_hz: 1
+  qos: sensor_data
+sim:
+  pack_resistance: 0.0107               # ohm = (4 series / 6 parallel) x 0.016 ohm cell DC resistance
+  ocv_curve_status: "NOT MEASURED. Generic NCA/NMC 18650 shape anchored to the 30Q sheet points (4.20 V full charge, 3.6 V nominal, 2.5 V cut-off, cells ship at 3.62-3.69 V); no measured 30Q OCV table was found"
+  ocv_table_per_cell: "1.0 4.18  0.9 4.06  0.8 3.97  0.7 3.88  0.6 3.80  0.5 3.73  0.4 3.66  0.3 3.58  0.2 3.50  0.1 3.38  0.05 3.28  0.02 3.10  0.0 2.80"   # SoC V
+  hotel_power: 4.23                     # W = Water Linked A50 4 W (datasheet) + CV7 0.23 W; compute and other loads unpublished, excluded
+  bus_voltage: "V = OCV(SoC) - R_pack * I_total; I_total = sum of T200 table currents + hotel load"
+limitations: >-
+  Temperature and ageing effects on capacity/resistance are not modelled. Wiring and connector resistance
+  is unpublished and not included.

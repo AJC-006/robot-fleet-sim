@@ -1,0 +1,55 @@
+model: TDK InvenSense ICM-42688-P 6-axis MEMS IMU (primary IMU of Holybro Pixhawk 6C)
+category: fc_imu
+vendor: TDK InvenSense
+datasheet: https://invensense.tdk.com/wp-content/uploads/2020/04/ds-000347_icm-42688-p-datasheet.pdf   # DS-000347 rev 1.7; local copy used for the values below
+sources:
+  - {url: https://docs.holybro.com/autopilot/pixhawk-6c/overview, used_for: "Pixhawk 6C carries ICM-42688-P (IMU1) and BMI055 (IMU2)"}
+  - {url: https://github.com/PX4/PX4-Autopilot/blob/main/boards/px4/fmu-v6c/init/rc.board_sensors, used_for: "which drivers PX4 starts on the 6C (icm42688p, bmi055, ms5611, ist8310)"}
+  - {path: src/drivers/imu/invensense/icm42688p/ICM42688P.hpp (PX4 v1.18.0-beta1), used_for: "PX4 runs the chip at 8 kHz gyro/accel ODR, gyro +-2000 dps, accel +-16 g"}
+  - {url: https://adm.invensense.tdk.com/icm-42688-p-and-icm-45686-allan-variance-deviations-parameters, used_for: "TDK forum: bias instability / ARW are NOT in the datasheet (page blocks scripts; content seen via search summary)"}
+specs:
+  gyro_noise_density: 4.887e-5          # rad/s/rtHz = 0.0028 deg/s/rtHz (datasheet Table 1, rate noise spectral density @10 Hz)
+  gyro_total_rms_noise_100hz: 4.887e-4  # rad/s = 0.028 deg/s-rms at BW 100 Hz (= density x sqrt(100), datasheet note 4)
+  gyro_zro_initial: 8.727e-3            # rad/s = +-0.5 deg/s board level 25 C (a tolerance bound, not a stddev)
+  gyro_zro_temp: 8.727e-5               # rad/s/K = +-0.005 deg/s/K
+  gyro_sensitivity_tolerance: 0.005     # +-0.5 %
+  gyro_fs_dps: 2000                     # as configured by PX4 (datasheet LSB: 16.4 LSB/(deg/s))
+  accel_noise_density_xy: 6.374e-4      # m/s^2/rtHz = 65 ug/rtHz (datasheet Table 2)
+  accel_noise_density_z: 6.865e-4       # m/s^2/rtHz = 70 ug/rtHz
+  accel_zero_g_initial: 0.1961          # m/s^2 = +-20 mg board level (tolerance bound)
+  accel_zero_g_temp: 1.47e-3            # m/s^2/K = +-0.15 mg/K
+  accel_sensitivity_tolerance: 0.005
+  accel_fs_g: 16                        # as configured by PX4 (2048 LSB/g at +-16 g)
+  gyro_bias_instability: unpublished    # estimate used: 5 deg/h = 2.424e-5 rad/s (consumer MEMS class, NOT a TDK figure)
+  accel_bias_instability: unpublished   # estimate used: 50 ug = 4.903e-4 m/s^2 (NOT a TDK figure)
+  odr_hz: 8000                          # PX4 driver configuration
+  mass: 2.0e-4                          # kg (package 2.5x3x0.91 mm; mass of the 6C board not included)
+ros_driver:
+  package: PX4 on-board driver icm42688p, exposed over uXRCE-DDS (px4_msgs)
+  topics: {/fmu/out/sensor_combined: px4_msgs/msg/SensorCombined}   # gyro_rad [rad/s FRD], accelerometer_m_s2 [FRD]
+  frame_id: FRD body (PX4 convention; the docs/notes/air.md conversion note says where it becomes FLU)
+  rate_hz: 250                          # sensor_combined follows the IMU integration rate (EKF2 prediction rate)
+  qos: PX4 uXRCE-DDS default (best effort, volatile, keep last 1)   # NOT verified against a running agent here
+sim:
+  gz_sensor: imu                        # PX4's gz bridge reads .../link/base_link/sensor/imu_sensor/imu (one IMU only)
+  update_rate: 250
+  # white noise per sample = density * sqrt(sample rate)  (Kalibr / gz convention; Allan deviation at 1 s = density)
+  gyro_noise_stddev: 7.727e-4           # rad/s = 4.887e-5 * sqrt(250)
+  accel_noise_stddev_xy: 1.0079e-2      # m/s^2 = 6.374e-4 * sqrt(250)
+  accel_noise_stddev_z: 1.0854e-2       # m/s^2 = 6.865e-4 * sqrt(250)
+  # turn-on bias drawn once per run; ASSUMPTION: the datasheet tolerance is a 3-sigma bound -> stddev = bound / 3
+  gyro_bias_stddev: 2.909e-3            # rad/s = 8.727e-3 / 3
+  accel_bias_stddev: 6.537e-2           # m/s^2 = 0.1961 / 3
+  # Gauss-Markov in-run bias from tools/imu_noise_params.py (Allan floor = the bias-instability ESTIMATES above, tau 1000 s assumed)
+  gyro_dynamic_bias_stddev: 1.0445e-5   # gz dynamic_bias_stddev (stationary stddev 2.3356e-4 rad/s)
+  accel_dynamic_bias_stddev_xy: 3.2706e-4
+  accel_dynamic_bias_stddev_z: 3.0376e-4
+  bias_correlation_time: 1000.0         # s
+limitations: >-
+  PX4's gz bridge subscribes to one IMU topic, so the second IMU of the 6C (BMI055) and PX4's IMU voting and
+  fault detection cannot be exercised. Bias instability and correlation time are unpublished (estimates
+  above, flagged). Sample quantisation is not applied: PX4 reads 8 kHz samples at +-2000 dps / +-16 g
+  (0.061 deg/s, 4.8 mg per LSB) and averages them to the 250 Hz output, so the quantisation of the averaged
+  value is far below the white noise. Scale-factor error, cross-axis sensitivity, temperature drift and
+  vibration (g-sensitivity, propeller-induced noise) are not modelled; vibration is the dominant IMU error on
+  real multirotors.

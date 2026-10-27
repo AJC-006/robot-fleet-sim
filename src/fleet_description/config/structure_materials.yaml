@@ -1,0 +1,58 @@
+# Structure mass model for tools/mass_properties.py (input; output is mass_properties.yaml).
+# Mesh parts come from blender/robots/part_stats/<robot>.json (tools/export_part_stats.py): one record per
+# part the procedural builder creates. Visual-only meshes carry no wall thickness, so each part is a thin
+# shell: mass = area x wall thickness x density, or a solid: mass = closed volume x density.
+#
+# densities: Engineering ToolBox, density of solids, https://www.engineeringtoolbox.com/density-solids-d_1265.html
+#   ABS 1060, acrylic 1190, aluminium 2700, steel 7820, rubber soft commercial 1100, glass common 2400-2800
+# wall thicknesses are design choices of this model, stated here (injection-moulded ABS housings 1.5-3 mm,
+# sheet aluminium and steel tube 1.5-2 mm); change them to change the robot, the mass follows.
+materials:
+  abs_housing:   {density: 1060, mode: shell, thickness: 0.002, source: "ABS 1060 kg/m3, 2 mm moulded wall"}
+  acrylic_glazing: {density: 1190, mode: shell, thickness: 0.003, source: "acrylic 1190 kg/m3, 3 mm sheet"}
+  aluminium_sheet: {density: 2700, mode: shell, thickness: 0.002, source: "aluminium 2700 kg/m3, 2 mm sheet"}
+  aluminium_tube: {density: 2700, mode: shell, thickness: 0.0015, source: "aluminium 2700 kg/m3, 1.5 mm tube wall (standard drawn tube)"}
+  steel_tube:    {density: 7820, mode: shell, thickness: 0.0015, source: "steel 7820 kg/m3, 1.5 mm tube wall"}
+  steel_solid:   {density: 7820, mode: solid, source: "steel 7820 kg/m3, solid (ball, pins)"}
+  solar_glass:   {density: 2600, mode: shell, thickness: 0.003, source: "glass common 2400-2800 kg/m3 (2600), 3 mm cover"}
+  tyre_rubber:   {density: 1100, mode: shell, thickness: 0.003, source: "rubber soft commercial 1100 kg/m3, 3 mm moulded tyre wall"}
+  foil:          {density: 2700, mode: shell, thickness: 0.0002, source: "aluminised foil 0.2 mm"}
+
+# mesh material name -> structure class (the OBJ material of the part; a part with several uses its first)
+material_class:
+  pearl: abs_housing
+  graphite: abs_housing
+  white: abs_housing
+  charcoal: abs_housing
+  deeppurple: abs_housing
+  violet: abs_housing
+  violetmetal: aluminium_sheet
+  plastic: abs_housing
+  led_violet: abs_housing
+  led_cyan: abs_housing
+  darksteel: aluminium_sheet
+  steel: steel_tube
+  gold: foil
+  solar: solar_glass
+  glass: acrylic_glazing
+  lens: abs_housing
+
+# part-name overrides (name without the .NNN suffix): class, or `exclude` (its mass is a catalog component)
+part_class:
+  ball: steel_solid                     # caster ball: solid steel sphere, goes to the caster link
+  post: steel_solid
+  lidar_base: exclude                   # sensor housings: mass comes from the catalog entry of the lidar
+  lidar_win: exclude
+  lidar_cap: exclude
+  lidar_dome: exclude
+  lidar_led: exclude
+  cam_body: exclude                     # camera stand-in: catalog D435
+  cam_lens: exclude
+  cam_ring: exclude
+  eye_ring: exclude
+  eye_lens: exclude
+  side_cam: exclude
+  win_side: acrylic_glazing
+  win_front: acrylic_glazing
+  win_rear: acrylic_glazing
+  sidestripe: abs_housing

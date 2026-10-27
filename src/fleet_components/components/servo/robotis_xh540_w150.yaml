@@ -1,0 +1,35 @@
+model: ROBOTIS DYNAMIXEL XH540-W150-R
+category: servo
+vendor: ROBOTIS
+datasheet: https://emanual.robotis.com/docs/en/dxl/x/xh540-w150/
+sources:
+  - {url: https://github.com/ROBOTIS-GIT/dynamixel_hardware_interface, used_for: "ros2_control driver (jazzy branch)"}
+specs:
+  mass: 0.165
+  size: [0.0335, 0.0585, 0.044]         # m (W x H x D), e-manual
+  gear_ratio: 152.3
+  resolution_pulses_per_rev: 4096
+  input_voltage: [10.0, 14.8]
+  stall_torque: {11.1: 6.6, 12.0: 7.1, 14.8: 8.5}
+  stall_current: {11.1: 4.5, 12.0: 4.9, 14.8: 5.9}
+  no_load_speed_rpm: {11.1: 66, 12.0: 70, 14.8: 86}
+  velocity_unit_rpm: 0.229
+  current_unit_a: 0.00269
+  pwm_limit_default: 885
+  velocity_limit_default: 300
+  current_limit_default: 2047
+sim:
+  resistance: 2.45                      # ohm = 12 / 4.9
+  back_emf_constant: 1.637              # V s/rad = 12 / (70 rpm * 2 pi / 60)
+  torque_constant: 1.449                # N m/A = 7.1 / 4.9
+  position_resolution: 1.534e-3
+unpublished:
+  rotor_inertia: "unpublished"
+  firmware_loop_rate: "unpublished"
+  backlash: "unpublished"
+limitations: >-
+  As the XM430-W210 entry.
+ros_driver:
+  package: dynamixel_hardware_interface
+  command_interfaces: [position]
+  state_interfaces: [position, velocity, effort]

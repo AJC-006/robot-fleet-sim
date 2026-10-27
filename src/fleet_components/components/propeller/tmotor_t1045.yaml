@@ -1,0 +1,27 @@
+model: T-Motor T1045 10x4.5 in carbon-nylon propeller (X500 V2 kit ships 1045 props)
+category: propeller
+vendor: T-Motor
+datasheet: https://store.tmotor.com/product/air-gear-450-ii-multicopter.html
+sources:
+  - {path: components/propeller/tmotor_t1045_air2216ii_kv920_16v.csv, used_for: "measured thrust / torque / rpm / current, 30-100 % throttle at 16 V (T-Motor)"}
+  - {path: tools/fit_motor_prop.py, used_for: "least-squares kT, kQ, hover and max values"}
+specs:
+  diameter: 0.254                       # m
+  pitch: 0.1143                         # m (4.5 in)
+  mass: 0.013                           # kg
+  inertia_about_axis: 6.989e-5          # kg m^2, uniform-rod UPPER BOUND m D^2 / 12
+  thrust_table: propeller/tmotor_t1045_air2216ii_kv920_16v.csv
+ros_driver:
+  package: none
+  topics: {}
+  frame_id: none
+  rate_hz: 0
+  qos: none
+sim:
+  motor_constant: 1.2295e-5             # N s^2/rad^2, kT = T / omega^2 fit (max error 7 % at low thrust, CT varies 0.089-0.096)
+  moment_constant: 0.01404              # m, kQ / kT, kQ = 1.7258e-7 (CP/CT cross-check 0.01405)
+  max_rot_velocity: 1032.2              # rad/s = 9857 rpm (100 % throttle row)
+limitations: >-
+  Static (bench) coefficients: no advance-ratio loss, no inflow or ground effect, no blade flapping, no
+  Reynolds dependence beyond the 7 % table scatter. Inertia is an upper bound (rod model), so the derived
+  lag is conservative.

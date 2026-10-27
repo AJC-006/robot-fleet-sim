@@ -1,0 +1,50 @@
+# knucker AUV: layout and component choices. Physics (mass, inertia, buoyancy, added mass, damping) is derived by
+# tools/derive.py and exported to config/knucker_physics.yaml; component numbers come from fleet_components.
+# Body frame base_link: x forward, y left, z up (FLU, REP-103), origin at the hull's geometric centre.
+name: knucker
+label: "Knucker (4-thruster hover AUV)"
+
+hull:                          # visual hull profile, see fleet_auv/shape.py
+  length: 1.30
+  radius: 0.090
+  nose_len: 0.40
+  tail_len: 0.45
+  tail_radius: 0.045
+
+# Components are catalog file stems (fleet_components/components/<category>/<stem>.yaml). To swap one, change the stem.
+thruster_deadband_us: 25         # BESC30-R3 stop band around 1500 us (esc catalog entry)
+components:
+  thruster: bluerobotics_t200
+  esc: bluerobotics_basic_esc
+  battery: bluerobotics_li_ion_4s_18ah
+  dvl: waterlinked_dvl_a50
+  ahrs: microstrain_3dm_cv7_ahrs
+  pressure: bluerobotics_bar30
+
+# 4 thrusters. dir = unit thrust direction for a positive command (the joint axis).
+thrusters:
+  port:   {pos: [-0.585,  0.15, 0.0], dir: [1, 0, 0], joint: thruster_port_joint}
+  stbd:   {pos: [-0.585, -0.15, 0.0], dir: [1, 0, 0], joint: thruster_stbd_joint}
+  vfore:  {pos: [ 0.33,   0.0,  0.0], dir: [0, 0, 1], joint: thruster_vfore_joint}
+  vaft:   {pos: [-0.30,   0.0,  0.0], dir: [0, 0, 1], joint: thruster_vaft_joint}
+
+# Sensor mounts in base_link (m). DVL looks down; its frame is FRD (REP-103 does not cover it, the A50 driver publishes FRD).
+sensors:
+  imu:      {pos: [0.0, 0.0, -0.025]}
+  dvl:      {pos: [-0.10, 0.0, -0.105],
+             ray_spacing_rad: 0.005,    # NUMERICAL: gz DVL <resolution> is the ray spacing of its depth render (rad = m at 1 m), NOT the 0.1 mm/s velocity resolution (the driver quantises that). 1e-4 means ~8600^2 rays/ping and RTF 0.1
+             rate_hz: 10,               # A50 ping rate is 4-15 Hz altitude dependent; 10 Hz mid value
+             beam_width_deg: 4.0,       # ASSUMED: A50 beam width is unpublished
+             velocity_noise: 1.5e-4}    # m/s per ping, from the single A50 JSON covariance example (2.4e-8 m2/s2), not a spec
+  pressure: {pos: [0.20, 0.0, 0.090]}     # on top of the hull so it reads depth to the vehicle top
+  battery:  {pos: [0.0, 0.0, 0.0]}
+  camera:   {pos: [0.64, 0.0, 0.02], hfov: 1.2}
+
+# controller gains (fleet_auv/controller.py). SI units, depth positive down, N / N m outputs.
+control:
+  rate_hz: 50
+  depth:   {kp: 55.0, ki: 5.0, kd: 85.0, wn: 0.65, rate_max: 0.45, i_max: 12.0}
+  pitch:   {kp: 28.0, ki: 0.0, kd: 12.0, i_max: 3.0}
+  heading: {kp: 14.0, ki: 0.4, kd: 12.0, wn: 1.1, rate_max: 0.8, i_max: 3.0}
+  surge:   {kp: 30.0, ki: 14.0, acc_max: 0.3, i_max: 25.0}
+  yaw_rate_max: 0.9

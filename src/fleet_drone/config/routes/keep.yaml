@@ -1,0 +1,14 @@
+# Via points merged into the keep's drone waypoints (fleet_worlds keep.yaml, section drone).
+# The great hall (x[-52,8] y[-64,58], 40 m walls, roof at 40-41.5 m) is only open towards the courtyard
+# through the 22 x 26 m dragon passage in its west wall (x=-54, y[-41,-19]); the east posterns are 2 x 2.6 m.
+# hall_far -> lake_a therefore leaves through the passage, climbs in the open courtyard and crosses the
+# hall roof at 48 m; the way home from the lake does the same in reverse.
+via:
+  lake_a:
+    - [-40.0, -30.0, 14.0]   # inside the hall, in front of the passage
+    - [-64.0, -30.0, 14.0]   # courtyard side of the passage
+    - [-72.0, -30.0, 48.0]   # climb in the open courtyard
+    - [30.0, -10.0, 48.0]    # over the hall roof and the east promenade
+  return:
+    - [35.0, -10.0, 48.0]    # climb over the lake
+    - [-72.0, -30.0, 48.0]   # over the hall roof into the courtyard

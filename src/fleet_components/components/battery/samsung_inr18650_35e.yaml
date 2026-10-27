@@ -1,0 +1,27 @@
+model: Samsung SDI INR18650-35E cell (pack built from these)
+category: battery
+vendor: Samsung SDI
+datasheet: https://www.orbtronic.com/content/samsung-35e-datasheet-inr18650-35e.pdf   # spec v1.1
+sources:
+  - {url: https://www.orbtronic.com/content/samsung-35e-datasheet-inr18650-35e.pdf, used_for: "Samsung SDI INR18650-35E specification v1.1: nominal and cut-off voltage, capacity, discharge current limits, AC impedance, mass, dimensions"}
+specs:                                  # per cell
+  nominal_voltage: 3.6                  # V
+  charge_voltage: 4.2
+  cutoff_voltage: 2.65
+  capacity_min: 3.350                   # Ah (0.2 C)
+  continuous_discharge_current: 8.0     # A
+  max_discharge_current: 13.0           # A (non-continuous)
+  ac_impedance_1khz_max: 0.035          # ohm
+  mass_max: 0.050                       # kg
+  diameter: 0.01855
+  length: 0.06525
+sim:
+  pack: {series: 3, parallel: 2}        # default; robots override in their config
+  # pack: V = s * V_cell, R = s * R_cell / p, capacity = p * Ah. 3S2P: 10.8 V nominal, 12.6 V full, 6.7 Ah, 16 A continuous
+  open_circuit_voltage_full: 4.2
+  open_circuit_voltage_nominal: 3.6
+unpublished:
+  discharge_curve: "the datasheet plots it; G4 digitises it or models OCV linear between 4.2 and 3.0 V per cell"
+limitations: >-
+  Pack mass counts cells only (BMS, holder and wiring unpublished). Aging, temperature and the 1 kHz
+  impedance (DC resistance is higher) are not modelled.

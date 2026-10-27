@@ -1,0 +1,37 @@
+model: u-blox MAX-M10S GNSS receiver (chip of the Holybro M10 class modules; X500 V2 kit ships an M8N)
+category: gnss
+vendor: u-blox
+datasheet: https://content.u-blox.com/sites/default/files/MAX-M10S_DataSheet_UBX-20035208.pdf   # local copy used
+sources:
+  - {url: https://docs.holybro.com/drone-development-kit/px4-development-kit-x500v2.md, used_for: "the X500 V2 kit lists a Holybro M8N GPS; M8N datasheet not collected, the M10 entry is the nearest sourced receiver"}
+  - {path: src/modules/simulation/gz_bridge/GZBridge.cpp navSatCallback (PX4 v1.18.0-beta1), used_for: "bridge adds its own small F9P-based Markov noise and fixes eph 0.9 m, epv 1.78 m, hdop 0.7, vdop 1.1, fix_type 3, SIM_GPS_USED satellites"}
+specs:
+  position_accuracy_cep: 1.5            # m (datasheet note: CEP 50 %, 24 h static, -130 dBm, > 6 SVs per system)
+  velocity_accuracy: 0.05               # m/s (datasheet footnote 2)
+  heading_accuracy_dynamic: 5.236e-3    # rad = 0.3 deg
+  max_nav_rate_hz: 10                   # default constellation set; 5 Hz with all four GNSS
+  ttff_hot_s: 1.0
+  vertical_accuracy: unpublished        # estimate used: 1.5 x horizontal (typical VDOP/HDOP; PX4's bridge uses the same 1.5 factor)
+  position_error_correlation_time: unpublished   # estimate used: 300 s (atmospheric/multipath errors drift over minutes)
+ros_driver:
+  package: PX4 on-board driver gps (ublox), exposed over uXRCE-DDS (px4_msgs)
+  topics: {/fmu/out/vehicle_gnss: px4_msgs/msg/VehicleGnss}
+  frame_id: none (lat/lon/alt WGS84, velocity NED)
+  rate_hz: 10
+  qos: PX4 uXRCE-DDS default
+sim:
+  gz_sensor: navsat                     # truth sensor "navsat_truth", error-free, 10 Hz
+  plugin: fleet_aircraft::GnssError   # republishes as navsat_sensor (PX4's topic) with the errors below
+  horizontal_stddev_m: 1.274            # per axis, CEP / 1.1774 (circular normal: CEP = 1.1774 sigma)
+  vertical_stddev_m: 1.911              # 1.5 x horizontal (estimate, see specs)
+  position_correlation_time_s: 300      # Gauss-Markov, estimate
+  velocity_stddev_mps: 0.05             # white, datasheet velocity accuracy taken as 1 sigma per axis
+limitations: >-
+  Stock gz NavSat noise is applied in degrees to latitude and longitude with one shared noise instance,
+  has no correlation in time (gz passes no time step) and cannot represent a receiver, so the error comes
+  from the fleet_aircraft GnssError plugin. Correlation time and vertical accuracy are estimates. The
+  PX4 bridge adds its own Markov noise (about 2 cm) and reports fixed eph/epv/hdop/vdop and satellite
+  count, so those fields do not reflect the error actually injected. No navigation latency is modelled
+  (EKF2_GPS_DELAY stays at PX4's 110 ms default), no multipath near buildings, no dropout, jamming or
+  spoofing. GNSS does not exist indoors: the lab, warehouse and apartment worlds use gnss_errors:=false
+  (an ideal position source, in effect a motion-capture stand-in).

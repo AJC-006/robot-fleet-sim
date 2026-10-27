@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>fleet_sensor_sim</name>
+  <version>0.1.0</version>
+  <description>Adapter nodes that turn raw Gazebo sensor output into the topics, frames, fields and QoS of the real ROS 2 drivers (sllidar_ros2, microstrain_inertial_driver, realsense2_camera), parameterised by the sensor catalog.</description>
+  <maintainer email="65161979+AJC-006@users.noreply.github.com">Alan</maintainer>
+  <license>Apache-2.0</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>fleet_components</exec_depend>
+
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

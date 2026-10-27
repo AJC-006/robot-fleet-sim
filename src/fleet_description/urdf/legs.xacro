@@ -1,0 +1,175 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Legs of the `kind: legged` robots (robots.yaml). Same convention as
+       src/fleet_legged/fleet_legged/kinematics.py:
+         coxa joint  at `hip` in base_link; yaw leg: axis z, frame rotated by mount_yaw_deg;
+                     roll leg: axis x (hip ab/ad)
+         femur joint yaw leg: (coxa, 0, 0); roll leg: (0, +-coxa, 0); axis y, q = 0 along the parent x,
+                     q > 0 swings the femur tip down
+         tibia joint (femur, 0, 0), axis y; foot sphere at (tibia, 0, 0) on the tibia link
+       The position state interfaces start at the crouch pose (inverse kinematics of the nominal foot
+       spot at crouch_height, solved here), so the robot spawns crouched and the gait node stands it up.
+       Meshes: meshes/<robot>/{coxa,femur,tibia}.obj, or <part>_l / <part>_r for the parts listed in
+       body.mirrored_meshes. -->
+
+  <xacro:property name="leg_type" value="${cfg.get('leg_type', 'yaw')}"/>
+  <xacro:property name="knee_sign" value="${float(cfg.get('knee', 1))}"/>
+  <xacro:property name="lk" value="${cfg.get('link', None)}"/>
+  <xacro:property name="lm" value="${mp['leg_links'] if 'leg_links' in mp else None}"/>
+  <xacro:property name="jd" value="${cfg.get('joint', None)}"/>
+  <xacro:property name="lim" value="${cfg.get('limits', None)}"/>
+  <xacro:property name="mirrored" value="${cfg['body'].get('mirrored_meshes', [])}"/>
+  <xacro:property name="crouch_q" value="${[]}"/>
+
+  <xacro:macro name="leg_mesh" params="part side">
+    <visual>
+      <geometry>
+        <mesh filename="package://fleet_description/meshes/${robot_name}/${part}${('_l' if side &gt; 0 else '_r') if part in mirrored else ''}.obj"/>
+      </geometry>
+    </visual>
+  </xacro:macro>
+
+  <xacro:macro name="leg_joint_urdf" params="name parent child xyz rpy axis lo hi">
+    <joint name="${name}" type="revolute">
+      <parent link="${parent}"/>
+      <child link="${child}"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+      <axis xyz="${axis}"/>
+      <limit lower="${lo}" upper="${hi}" effort="${jd['effort']}" velocity="${jd['velocity']}"/>
+      <dynamics damping="${jd['damping']}" friction="${jd['friction']}"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="leg" params="i">
+    <xacro:property name="L" value="${cfg['legs'][i]}"/>
+    <xacro:property name="n" value="${L['name']}"/>
+    <xacro:property name="hx" value="${float(L['hip'][0])}"/>
+    <xacro:property name="hy" value="${float(L['hip'][1])}"/>
+    <xacro:property name="hz" value="${float(L['hip'][2])}"/>
+    <xacro:property name="side" value="${1.0 if hy &gt;= 0 else -1.0}"/>
+    <xacro:property name="yaw" value="${radians(float(L.get('mount_yaw_deg', 0.0))) if leg_type == 'yaw' else 0.0}"/>
+    <xacro:property name="lc" value="${float(lk['coxa'])}"/>
+    <xacro:property name="l1" value="${float(lk['femur'])}"/>
+    <xacro:property name="l2" value="${float(lk['tibia'])}"/>
+    <xacro:property name="rf" value="${float(lk['foot_radius'])}"/>
+    <xacro:property name="rc" value="${float(lk['coxa_radius'])}"/>
+    <xacro:property name="r1" value="${float(lk['femur_radius'])}"/>
+    <xacro:property name="r2" value="${float(lk['tibia_radius'])}"/>
+    <xacro:property name="c_lo" value="${float(lim['coxa'][0]) if (leg_type == 'yaw' or side &gt; 0) else -float(lim['coxa'][1])}"/>
+    <xacro:property name="c_hi" value="${float(lim['coxa'][1]) if (leg_type == 'yaw' or side &gt; 0) else -float(lim['coxa'][0])}"/>
+
+    <!-- crouch inverse kinematics (see kinematics.py Leg.ik) -->
+    <xacro:property name="dx" value="${float(L['foot'][0]) - hx}"/>
+    <xacro:property name="dy" value="${float(L['foot'][1]) - hy}"/>
+    <xacro:property name="dz" value="${-(float(cfg['crouch_height']) - rf) - hz}"/>
+    <xacro:property name="rho" value="${sqrt(max(dy * dy + dz * dz - lc * lc, 1e-8))}"/>
+    <xacro:property name="q0" value="${((atan2(dy, dx) - yaw + pi) % (2 * pi) - pi) if leg_type == 'yaw' else (atan2(dz, dy) - atan2(-rho, side * lc))}"/>
+    <xacro:property name="pa" value="${(hypot(dx, dy) - lc) if leg_type == 'yaw' else dx}"/>
+    <xacro:property name="pb" value="${-dz if leg_type == 'yaw' else rho}"/>
+    <xacro:property name="q2" value="${knee_sign * acos(max(-1.0, min(1.0, (pa * pa + pb * pb - l1 * l1 - l2 * l2) / (2 * l1 * l2))))}"/>
+    <xacro:property name="q1" value="${atan2(pb, pa) - atan2(l2 * sin(q2), l1 + l2 * cos(q2))}"/>
+    <xacro:property name="q0c" value="${max(c_lo, min(c_hi, q0))}"/>
+    <xacro:property name="q1c" value="${max(float(lim['femur'][0]), min(float(lim['femur'][1]), q1))}"/>
+    <xacro:property name="q2c" value="${max(float(lim['tibia'][0]), min(float(lim['tibia'][1]), q2))}"/>
+
+    <!-- coxa -->
+    <link name="${n}_coxa_link">
+      <xacro:leg_mesh part="coxa" side="${side}"/>
+      <inertial>
+        <mass value="${lm['coxa']['mass']}"/>
+        <xacro:if value="${leg_type == 'yaw'}">
+          <origin xyz="${lm['coxa']['com_x']} 0 0" rpy="0 0 0"/>
+          <inertia ixx="${lm['coxa']['ixx']}" iyy="${lm['coxa']['iyy']}" izz="${lm['coxa']['izz']}" ixy="0" ixz="0" iyz="0"/>
+        </xacro:if>
+        <xacro:unless value="${leg_type == 'yaw'}">
+          <origin xyz="0 ${side * lm['coxa']['com_x']} 0" rpy="0 0 0"/>
+          <inertia ixx="${lm['coxa']['iyy']}" iyy="${lm['coxa']['ixx']}" izz="${lm['coxa']['izz']}" ixy="0" ixz="0" iyz="0"/>
+        </xacro:unless>
+      </inertial>
+    </link>
+    <xacro:leg_joint_urdf name="${n}_coxa_joint" parent="base_link" child="${n}_coxa_link"
+                          xyz="${hx} ${hy} ${hz}" rpy="0 0 ${yaw}"
+                          axis="${'0 0 1' if leg_type == 'yaw' else '1 0 0'}" lo="${c_lo}" hi="${c_hi}"/>
+
+    <!-- femur -->
+    <link name="${n}_femur_link">
+      <xacro:leg_mesh part="femur" side="${side}"/>
+      <collision>
+        <origin xyz="${l1 / 2} 0 0" rpy="0 ${pi / 2} 0"/>
+        <geometry><cylinder radius="${r1}" length="${l1}"/></geometry>
+      </collision>
+      <inertial>
+        <origin xyz="${lm['femur']['com_x']} 0 0" rpy="0 0 0"/>
+        <mass value="${lm['femur']['mass']}"/>
+        <inertia ixx="${lm['femur']['ixx']}" iyy="${lm['femur']['iyy']}" izz="${lm['femur']['izz']}" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+    <xacro:leg_joint_urdf name="${n}_femur_joint" parent="${n}_coxa_link" child="${n}_femur_link"
+                          xyz="${lc if leg_type == 'yaw' else 0.0} ${0.0 if leg_type == 'yaw' else side * lc} 0" rpy="0 0 0"
+                          axis="0 1 0" lo="${lim['femur'][0]}" hi="${lim['femur'][1]}"/>
+
+    <!-- tibia + foot -->
+    <link name="${n}_tibia_link">
+      <xacro:leg_mesh part="tibia" side="${side}"/>
+      <collision>
+        <origin xyz="${(l2 - rf) / 2} 0 0" rpy="0 ${pi / 2} 0"/>
+        <geometry><cylinder radius="${r2}" length="${l2 - rf}"/></geometry>
+      </collision>
+      <collision name="${n}_foot_collision">
+        <origin xyz="${l2} 0 0" rpy="0 0 0"/>
+        <geometry><sphere radius="${rf}"/></geometry>
+      </collision>
+      <inertial>
+        <origin xyz="${lm['tibia']['com_x']} 0 0" rpy="0 0 0"/>
+        <mass value="${lm['tibia']['mass']}"/>
+        <inertia ixx="${lm['tibia']['ixx']}" iyy="${lm['tibia']['iyy']}" izz="${lm['tibia']['izz']}" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+    <xacro:leg_joint_urdf name="${n}_tibia_joint" parent="${n}_femur_link" child="${n}_tibia_link"
+                          xyz="${l1} 0 0" rpy="0 0 0" axis="0 1 0" lo="${lim['tibia'][0]}" hi="${lim['tibia'][1]}"/>
+
+    <!-- foot contact: isotropic Coulomb friction (robots.yaml foot_mu). DART reads only mu/mu2/fdir1/
+         slip/restitution (gz-physics 7.8 dartsim/src/SDFFeatures.cc); its contacts are rigid. -->
+    <gazebo reference="${n}_tibia_link">
+      <mu1>${cfg['body']['foot_mu']}</mu1>
+      <mu2>${cfg['body']['foot_mu']}</mu2>
+    </gazebo>
+    <!-- source: soft plastic on dry concrete 0.6 (Roymech table, via web.mae.ufl.edu/designlab
+         "Friction coefficients between different wheel/tire materials and concrete"); G6 sets the leg
+         shell material. -->
+    <gazebo reference="${n}_femur_link">
+      <mu1>0.6</mu1>
+      <mu2>0.6</mu2>
+    </gazebo>
+
+    <!-- collect the crouch pose for the ros2_control block -->
+    <xacro:property name="crouch_q" value="${crouch_q + [[q0c, q1c, q2c]]}" scope="global"/>
+  </xacro:macro>
+
+  <xacro:macro name="legs_from" params="i">
+    <xacro:if value="${i &lt; n_legs}">
+      <xacro:leg i="${i}"/>
+      <xacro:legs_from i="${i + 1}"/>
+    </xacro:if>
+  </xacro:macro>
+
+  <!-- ros2_control: position commands, position + velocity states; initial position = crouch pose -->
+  <xacro:macro name="leg_control_joint" params="name q">
+    <joint name="${name}">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">${q}</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="leg_joints_from" params="i">
+    <xacro:if value="${i &lt; n_legs}">
+      <xacro:leg_control_joint name="${cfg['legs'][i]['name']}_coxa_joint" q="${'%.6f' % crouch_q[i][0]}"/>
+      <xacro:leg_control_joint name="${cfg['legs'][i]['name']}_femur_joint" q="${'%.6f' % crouch_q[i][1]}"/>
+      <xacro:leg_control_joint name="${cfg['legs'][i]['name']}_tibia_joint" q="${'%.6f' % crouch_q[i][2]}"/>
+      <xacro:leg_joints_from i="${i + 1}"/>
+    </xacro:if>
+  </xacro:macro>
+</robot>

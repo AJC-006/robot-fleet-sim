@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Passive ball caster: fixed joint + sphere collision whose Coulomb friction equals the ball's
+       rolling resistance (resistance = C_rr * N opposite to the motion, isotropic with the
+       CoulombFriction world plugin). The ball's spin is not simulated.
+       The visible ball is part of base.obj. The sphere touches z = 0 when base_link is at wheel_radius. -->
+  <xacro:macro name="caster" params="name x y radius">
+    <link name="caster_${name}_link">
+      <collision>
+        <geometry><sphere radius="${radius}"/></geometry>
+      </collision>
+      <inertial>
+        <mass value="${caster_mass}"/>
+        <inertia ixx="${mp['caster']['inertia']}" iyy="${mp['caster']['inertia']}" izz="${mp['caster']['inertia']}"
+                 ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+    <joint name="caster_${name}_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="caster_${name}_link"/>
+      <origin xyz="${x} ${y} ${radius - wheel_radius}" rpy="0 0 0"/>
+    </joint>
+    <!-- source: Omnitrack ball transfer units, friction "less than 0.5% of the conveyed load" (1:0.005)
+         (omnitrack.com/ball-transfer-units/spring-loaded-t-b-bars/): hard ball on a hard flat surface, a
+         lower bound for a small caster on a floor. G3 replaces it with the selected caster's datasheet. -->
+    <gazebo reference="caster_${name}_link">
+      <mu1>0.005</mu1>
+      <mu2>0.005</mu2>
+    </gazebo>
+  </xacro:macro>
+</robot>

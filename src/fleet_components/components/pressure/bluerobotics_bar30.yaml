@@ -1,0 +1,31 @@
+model: Blue Robotics Bar30 High-Resolution 300 m Depth/Pressure Sensor (R2), MS5837-30BA
+category: pressure
+vendor: Blue Robotics (sensor element TE Connectivity MS5837-30BA)
+datasheet: https://www.te.com/en/product-CAT-BLPS0017.html   # TE MS5837-30BA (orderable MS583730BA01-50); values from datasheet REV C6 02/2025
+sources:
+  - {url: https://www.robotshop.com/products/bar30-high-resolution-300m-depth-pressure-sensor-r2, used_for: "Bar30 range 30 bar, 2 mm depth resolution, mass, thread"}
+  - {url: https://www.mouser.in/new/te-connectivity/te-ms5837-30ba/, used_for: "MS5837-30BA supply 1.5-3.6 V, I2C, 0-30 bar"}
+  - {url: https://github.com/bluerobotics/bar30-pressure-sensor, used_for: "hardware reference (no ROS 2 driver published by the vendor)"}
+specs:
+  range: [0.0, 3.0e6]                   # Pa absolute (0-30 bar)
+  resolution_rms_osr8192: 20.0          # Pa (0.20 mbar RMS at OSR 8192; 4096: 28, 2048: 38, 1024: 54, 512: 84, 256: 157 Pa)
+  output_lsb: 10.0                      # Pa (compensated pressure integer in 0.1 mbar; datasheet example 39998 = 3999.8 mbar)
+  conversion_time_osr8192_max: 0.01808  # s per conversion (D1 and D2 needed per sample -> <= 27.6 Hz)
+  absolute_accuracy: 5000.0             # Pa (+/-50 mbar, 0-6 bar, 0-45 C, MS5837 datasheet); Bar30 page states +/-200 mbar
+  long_term_stability: 3000.0           # Pa per year (+/-30 mbar/yr)
+  temperature_resolution: 0.0022        # K
+  temperature_accuracy: 4.0             # K (+/-4 C)
+  mass: 0.014                           # kg
+ros_driver:
+  package: none published (vendor provides Python/Arduino libraries; ArduSub/PX4 read it on the autopilot)
+  topics: {pressure: sensor_msgs/msg/FluidPressure, temperature: sensor_msgs/msg/Temperature}
+  frame_id: pressure_link
+  rate_hz: 20
+  qos: sensor_data
+sim:
+  fluid_pressure: "p = p_atm + rho g (z_surface - z_sensor), Pa absolute, + white noise sigma 20 Pa, then quantised to 10 Pa; variance field = 20^2 Pa^2"
+  rate_hz: 20                           # <= 27.6 Hz conversion limit at OSR 8192
+  offset: "constant per run within the absolute accuracy (default 0); depth nodes zero at the surface as ArduSub does"
+limitations: >-
+  Hysteresis, temperature transients and drift over the stability spec are not modelled. The ROS 2
+  interface is this project's driver node, since none is published for the Bar30.

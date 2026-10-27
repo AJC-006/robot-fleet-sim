@@ -1,0 +1,58 @@
+model: MicroStrain 3DM-CV7-AHRS
+category: imu
+vendor: MicroStrain by HBK
+datasheet: https://metromatics.com.au/wp-content/uploads/2024/04/3DM-CV7-AR.pdf   # copy of 8400-0141 (series sheet AR/AHRS/INS)
+sources:
+  - {url: "https://www.microstrain.com/sites/default/files/8400-0141_3DM_CV7_Datasheet.pdf", used_for: "vendor original of the same datasheet (blocks scripts)"}
+  - {url: https://github.com/LORD-MicroStrain/microstrain_inertial, used_for: "driver parameters (params.yml: imu_data_rate, imu_data_raw_rate, frame_id, use_enu_frame, imu_*_cov)"}
+  - {url: https://www.hbkworld.com/de/products/transducers/inertial-sensors/attitude-and-heading/3dm-cv7-ahrs, used_for: "reseller page that quotes different random-walk values (accel 20 ug/rtHz, gyro 0.3 deg/rt-h); the datasheet values are used"}
+specs:
+  accel_noise_density: 2.942e-4         # m/s^2/rtHz = 30 ug/rtHz * 9.80665e-6
+  accel_bias_instability: 1.765e-4      # m/s^2 = 18 ug
+  accel_turn_on_bias: 3.92e-4           # m/s^2 = 40 ug (turn-on to turn-on, <24 h)
+  accel_range_g: [4, 8, 16]
+  gyro_noise_density: 4.121e-5          # rad/s/rtHz = 8.5 deg/h/rtHz
+  gyro_bias_instability: 7.272e-6       # rad/s = 1.5 deg/h
+  gyro_turn_on_bias: 6.98e-5            # rad/s = 0.004 deg/s
+  gyro_range_dps: [250, 500, 1000]
+  roll_pitch_static_deg: 0.25
+  roll_pitch_dynamic_deg: 0.5
+  heading_static_deg: 0.5
+  heading_dynamic_deg: 2.0
+  output_rate_hz: [1, 1000]
+  mass: 0.0083                          # kg
+  size: [0.038, 0.024, 0.0086]          # m
+ros_driver:
+  package: microstrain_inertial_driver  # ros-jazzy-microstrain-inertial-driver
+  parameters: {frame_id: imu_link, use_enu_frame: true, imu_data_rate: 100, imu_data_raw_rate: 100}
+  topics: {imu/data: sensor_msgs/msg/Imu, imu/data_raw: sensor_msgs/msg/Imu}
+  frame_id: imu_link
+  rate_hz: 100                          # driver default imu_data_rate 100; imu_data_raw_rate default is 1, the sim profile sets 100
+  qos: {reliability: reliable, durability: volatile, history: keep_last, depth: 10}   # NOT verified: driver source not installed; ROS default
+sim:
+  gz_sensor: imu
+  update_rate: 100
+  # white noise = noise density * sqrt(sample rate) (Allan deviation at 1 s equals the density)
+  accel_noise_stddev: 2.942e-3          # m/s^2 = 2.942e-4 * sqrt(100)
+  gyro_noise_stddev: 4.121e-4           # rad/s = 4.121e-5 * sqrt(100)
+  # Gauss-Markov bias fitted by tools/imu_noise_params.py so that the Allan minimum equals the bias instability
+  # (tau 1000 s is an assumption: datasheets give the floor, not the correlation time)
+  accel_bias_dynamic_stddev: 9.1914e-5  # gz dynamic_bias_stddev (stationary stddev 2.0553e-3 m/s^2)
+  gyro_bias_dynamic_stddev: 1.1387e-6   # (stationary stddev 2.5461e-5 rad/s)
+  bias_correlation_time: 1000.0         # s
+  # turn-on bias, drawn once per run; ASSUMPTION: the turn-on to turn-on figure is a 1-sigma value
+  accel_turn_on_bias_stddev: 3.92e-4
+  gyro_turn_on_bias_stddev: 6.98e-5
+  # orientation (imu/data): ground truth plus one fixed offset per run drawn with the static accuracy as 1 sigma
+  orientation_error_stddev_rad: [4.363e-3, 4.363e-3, 8.727e-3]   # 0.25, 0.25, 0.5 deg (roll, pitch, heading)
+  # covariances published, from the noise model (not the driver default 0.01): variance of one sample
+  orientation_covariance_diag: [1.9e-5, 1.9e-5, 7.6e-5]
+  angular_velocity_covariance_diag: [1.698e-7, 1.698e-7, 1.698e-7]
+  linear_acceleration_covariance_diag: [8.655e-6, 8.655e-6, 8.655e-6]
+limitations: >-
+  Scale-factor error (600/1000 ppm over temperature), temperature bias drift (0.75 mg, 0.03 deg/s), axis
+  misalignment and cross-axis sensitivity are not modelled. Orientation is ground truth plus a constant
+  per-run offset, not the output of the on-board adaptive EKF (no filter transients, no magnetic
+  disturbance, no heading drift). The Gauss-Markov bias reproduces the Allan floor but not 1/f noise
+  exactly. Range saturation is not applied. The driver source is not installed here, so its QoS and the
+  exact content of imu/data vs imu/data_raw follow REP-145 (data_raw: no orientation, covariance[0] = -1).

@@ -1,0 +1,29 @@
+model: Blue Robotics Basic ESC (BESC30-R3)
+category: esc
+vendor: Blue Robotics
+datasheet: https://bluerobotics.com/store/thrusters/speed-controllers/besc30-r3/
+sources:
+  - {url: https://bluerobotics.com/store/thrusters/speed-controllers/besc30-r3/, used_for: "voltage, current, PWM range, deadband, update rate, mass"}
+specs:
+  supply_voltage_range: [7.0, 26.0]     # V
+  current_continuous: 30.0              # A
+  pwm_min_us: 1100                      # us  full reverse
+  pwm_stop_us: 1500                     # us
+  pwm_max_us: 1900                      # us  full forward
+  deadband_us: 25                       # us  (1500 +/- 25 us, firmware BLHeli_S as shipped)
+  update_rate_max_hz: 400               # Hz
+  mass: 0.0163                          # kg (16.3 g)
+  firmware: BLHeli_S (bidirectional)
+ros_driver:
+  package: none                         # driven by a PWM output (autopilot or PWM board); no ROS driver of its own
+  topics: {}
+  frame_id: none
+  rate_hz: 0
+  qos: none
+sim:
+  input: pulse width in us, clamped to [1100, 1900], held between updates (zero-order hold), max 400 Hz
+  deadband: "|pwm - 1500| <= 25 us -> motor stopped; outside, the T200 table is used (table itself is zero for 1472-1528 us at 16 V)"
+  current_limit: "30 A continuous: the T200 table never exceeds 32 A (20 V); report over-current, do not clip (the ESC has no published current limiter)"
+limitations: >-
+  ESC switching losses and the motor's electrical transient are inside the T200 table and the identified
+  transfer function; they are not modelled separately.

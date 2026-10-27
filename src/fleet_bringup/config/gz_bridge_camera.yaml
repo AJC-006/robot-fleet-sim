@@ -1,0 +1,11 @@
+# Raw Gazebo camera renders (camera:=true); camera_driver_sim turns them into the realsense2_camera topics.
+- ros_topic_name: /gz/camera/color/image
+  gz_topic_name: /gz/camera/color/image
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: gz.msgs.Image
+  direction: GZ_TO_ROS
+- ros_topic_name: /gz/camera/depth/image
+  gz_topic_name: /gz/camera/depth/image
+  ros_type_name: sensor_msgs/msg/Image
+  gz_type_name: gz.msgs.Image
+  direction: GZ_TO_ROS

@@ -1,0 +1,135 @@
+_generated_by: tools/export_physics.py from config/knucker_derived.json (tools/derive.py); do not edit by hand
+fluid: {temperature_c: 15.0, density: 999.1026, air_density: 1.225, gravity: 9.80665, source: 'Tanaka et al. 2001 Metrologia 38:301; ISA sea level;
+    ISO standard gravity'}
+rigid_body:
+  mass: 25.46424
+  cg: [0.0162, -1.4e-05, -0.014215]
+  inertia_cg: {ixx: 0.112796, iyy: 2.628852, izz: 2.651492, ixy: -0.001132, ixz: 0.031441, iyz: 2.6e-05}
+  displaced_volume: 0.025742
+  cb: [0.0162, -1.1e-05, 0.000867]
+fluid_added_mass: {xx: 4.28272, yy: 34.73554, yp: -0.6846, yr: -1.37533, zz: 35.36257, zq: 3.48196, pp: 0.26532, pr: 0.1532, qq: 5.09061, rr: 2.95048}
+hydrodynamics: {xU: -0.218, xUabsU: -4.455, yVabsV: -154.78, zWabsW: -183.98, kPabsP: -0.574, mQabsQ: -11.05, nRabsR: -9.304, yRabsR: 5.285, nVabsV: 11.246,
+  zQabsQ: -2.851, mWabsW: 2.061, yVabsU: -36.77, nVabsU: 8.278, kVabsU: 4.618, zWabsU: -127.63, mWabsU: 28.93}
+buoyancy_primitives:
+- name: hull00
+  type: cylinder
+  axis: x
+  r: 0.04989
+  l: 0.1
+  pos: [-0.6, 0.0, 0.000919]
+- name: hull01
+  type: cylinder
+  axis: x
+  r: 0.060392
+  l: 0.1
+  pos: [-0.5, 0.0, 0.000919]
+- name: hull02
+  type: cylinder
+  axis: x
+  r: 0.074284
+  l: 0.1
+  pos: [-0.4, 0.0, 0.000919]
+- name: hull03
+  type: cylinder
+  axis: x
+  r: 0.047794
+  l: 0.1
+  pos: [-0.3, 0.0, 0.000919]
+- name: hull04
+  type: cylinder
+  axis: x
+  r: 0.093653
+  l: 0.1
+  pos: [-0.2, 0.0, 0.000919]
+- name: hull05
+  type: cylinder
+  axis: x
+  r: 0.094862
+  l: 0.1
+  pos: [-0.1, 0.0, 0.000919]
+- name: hull06
+  type: cylinder
+  axis: x
+  r: 0.09473
+  l: 0.1
+  pos: [0.0, 0.0, 0.000919]
+- name: hull07
+  type: cylinder
+  axis: x
+  r: 0.094597
+  l: 0.1
+  pos: [0.1, 0.0, 0.000919]
+- name: hull08
+  type: cylinder
+  axis: x
+  r: 0.094464
+  l: 0.1
+  pos: [0.2, 0.0, 0.000919]
+- name: hull09
+  type: cylinder
+  axis: x
+  r: 0.065567
+  l: 0.1
+  pos: [0.3, 0.0, 0.000919]
+- name: hull10
+  type: cylinder
+  axis: x
+  r: 0.078209
+  l: 0.1
+  pos: [0.4, 0.0, 0.000919]
+- name: hull11
+  type: cylinder
+  axis: x
+  r: 0.076662
+  l: 0.1
+  pos: [0.5, 0.0, 0.000919]
+- name: hull12
+  type: cylinder
+  axis: x
+  r: 0.049453
+  l: 0.1
+  pos: [0.6, 0.0, 0.000919]
+- name: t200_port
+  type: cylinder
+  axis: x
+  r: 0.023023
+  l: 0.113
+  pos: [-0.585, 0.15, 0.0]
+- name: t200_stbd
+  type: cylinder
+  axis: x
+  r: 0.023023
+  l: 0.113
+  pos: [-0.585, -0.15, 0.0]
+- name: t200_vfore
+  type: cylinder
+  axis: z
+  r: 0.023023
+  l: 0.113
+  pos: [0.33, 0.0, 0.0]
+- name: t200_vaft
+  type: cylinder
+  axis: z
+  r: 0.023023
+  l: 0.113
+  pos: [-0.3, 0.0, 0.0]
+- name: tunnel_wall_vfore
+  type: cylinder
+  axis: z
+  r: 0.02569
+  l: 0.174945
+  pos: [0.33, 0.0, 0.0]
+- name: tunnel_wall_vaft
+  type: cylinder
+  axis: z
+  r: 0.02569
+  l: 0.166112
+  pos: [-0.3, 0.0, 0.0]
+buoyancy_check:
+  volume_l: 25.742
+  target_volume_l: 25.742
+  cb_x: 0.0162
+  cb_z: 0.000867
+  target_cb: [0.0162, -1.1e-05, 0.000867]
+  slab_correction_a: 0.14187
+  slab_correction_b: -0.04151

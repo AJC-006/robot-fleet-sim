@@ -1,0 +1,24 @@
+model: T-Motor AIR 20A ESC (stand-in for the BLHeli_S 20A ESC of the Holybro X500 V2 kit)
+category: esc_air
+vendor: T-Motor
+datasheet: https://store.tmotor.com/product/air-gear-450-ii-multicopter.html
+sources:
+  - {url: https://store.tmotor.com/product/air-gear-450-ii-multicopter.html, used_for: "20 A continuous, 30 A peak (10 s), 3-4S, 21 g, throttle signal 50-600 Hz"}
+  - {url: https://docs.holybro.com/drone-development-kit/px4-development-kit-x500v2.md, used_for: "kit ESC is a BLHeli_S 20 A; its detailed specs are unpublished"}
+specs:
+  continuous_current_a: 20
+  peak_current_a: 30
+  cells: [3, 4]
+  mass: 0.021
+  signal_rate_hz: [50, 600]
+  active_braking: unverified            # damped-light braking assumed in the motor time constant
+ros_driver:
+  package: none (PWM/DShot from PX4, no telemetry in SITL)
+  topics: {}
+  frame_id: none
+  rate_hz: 0
+  qos: none
+sim:
+  note: represented only through the motor time constants (bldc_motor entry)
+limitations: >-
+  No ESC model: throttle curve, deadtime, braking behaviour and desync are folded into one first-order lag.

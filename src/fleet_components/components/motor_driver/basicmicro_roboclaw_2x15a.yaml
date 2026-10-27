@@ -1,0 +1,31 @@
+model: Basicmicro RoboClaw 2x15A
+category: motor_driver
+vendor: Basicmicro
+datasheet: https://downloads.basicmicro.com/docs/roboclaw_datasheet_2x15A.pdf   # v3.0
+sources:
+  - {url: https://github.com/dumbotics/roboclaw_hardware_interface, used_for: "ros2_control driver: velocity command, position-only state, parameters (Apache-2.0)"}
+specs:
+  channels: 2
+  supply_voltage: [6.0, 34.0]           # V
+  continuous_current: 15.0              # A per channel
+  peak_current: 30.0                    # A per channel
+  on_resistance: 0.0043                 # ohm
+  max_quadrature_pps: 9800000
+  counter_bits: 32
+  mass: 0.062                           # kg
+  size: [0.0737, 0.0667, 0.0178]       # m, datasheet v3.0 dimensions (2.9 x 2.63 in board, 0.70 in height)
+  features: [velocity PID with auto-tune, programmable current limit, regenerative braking]
+unpublished:
+  pid_loop_rate: "not in the datasheet (user manual, G4)"
+ros_driver:
+  package: roboclaw_hardware_interface   # dumbotics, ros2_control SystemInterface
+  parameters: {serial_port: /dev/ttyACM0, address: 128, qppr: "counts per output rev", motor_type: "velocity"}
+  command_interfaces: [velocity]
+  state_interfaces: [position]            # no velocity state: diff_drive_controller needs position_feedback: true
+sim:
+  channels: 2
+  current_limit: 15.0
+  on_resistance: 0.0043
+limitations: >-
+  PWM switching ripple, current-loop dynamics and the exact velocity-PID form are not modelled until G4
+  reads the user manual; the quasi-static drive is in the G4 actuator plugin.

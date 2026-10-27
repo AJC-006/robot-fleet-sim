@@ -1,0 +1,12 @@
+# Fallback drone mission for the apartment (fleet_worlds apartment.yaml has no drone section yet).
+# Same schema as a world yaml's `drone:` section; z is world height (floor z = 0, ceilings at 2.7 m).
+# The living room is the only space with >= 1 m clearance all round at 1.3-1.6 m height, so this is a
+# short, slow indoor loop between the sofa, the dining table and the balcony door.
+drone:
+  takeoff: {x: -2.6, y: -2.9}
+  cruise_altitude: 1.4
+  waypoints:
+    - {name: lr_west, x: -3.0, y: -3.4, z: 1.3}
+    - {name: lr_south, x: -2.0, y: -3.8, z: 1.5}
+    - {name: dining_side, x: -1.0, y: -3.2, z: 1.6}
+    - {name: lr_north, x: -2.2, y: -2.5, z: 1.4}

@@ -1,0 +1,43 @@
+model: Blue Robotics T200 Thruster (R2)
+category: thruster
+vendor: Blue Robotics
+datasheet: https://bluerobotics.com/store/thrusters/t100-t200-thrusters/t200-thruster-r2-rp/
+sources:
+  - {url: https://bluerobotics.com/store/thrusters/t100-t200-thrusters/t200-thruster-r2-rp/, used_for: "performance tables 10-20 V (bluerobotics_t200_performance.csv), mass, dimensions"}
+  - {url: "https://doi.org/10.3390/jmse10121898", used_for: "thrust dynamics: von Benzon et al. 2022, J. Mar. Sci. Eng. 10:1898, identified 3rd-order transfer function"}
+  - {url: https://discuss.bluerobotics.com/, used_for: "motor electrical/mechanical parameters measured by a forum user (Sept 2023, thread 'Full caracteristics of the T100 and T200'); unpublished by vendor, informative only"}
+specs:
+  supply_voltage_range: [7.0, 20.0]     # V
+  thrust_max_fwd_16v: 51.44             # N   (5.25 kgf "full throttle FWD @16 V"; table max 5.245 kgf)
+  thrust_max_rev_16v: -39.91            # N   (4.10 kgf REV @16 V; table -4.069 kgf)
+  thrust_max_fwd_12v: 36.42             # N   (3.71 kgf @12 V)
+  thrust_max_rev_12v: -28.60            # N   (2.92 kgf @12 V)
+  current_max_16v: 24.3                 # A   (table at 1100 us, 16 V; "24 A / 390 W" headline)
+  current_max_12v: 17.08                # A
+  current_max_20v: 32.0                 # A
+  rpm_max_16v: 3533                     # rev/min (table)
+  propeller_diameter: 0.076             # m   (76 mm)
+  nozzle_outer_diameter: 0.100          # m   (100 mm)
+  length: 0.113                         # m   (113 mm)
+  mass_air: 0.427                       # kg  (427 g with 1 m cable)
+  mass_water: 0.239                     # kg  (239 g apparent weight in water)
+  displaced_volume: 0.000188            # m^3 (= (0.427-0.239)/999.1, derived)
+  minimum_thrust: 0.196                 # N   (0.02 kgf, ESC-limited)
+  performance_table: bluerobotics_t200_performance.csv   # PWM 1100-1900 us x 10..20 V: rpm, current, power, force
+ros_driver:
+  package: none                         # T200 is driven by an ESC; command interface is the ESC PWM pulse width (see esc/bluerobotics_basic_esc.yaml)
+  topics: {}
+  frame_id: thruster_<name>_link
+  rate_hz: 0
+  qos: none
+sim:
+  plugin: custom (gz Thruster in gz-sim 8.15 cannot express it; see docs/notes/sea.md section Thruster plugin)
+  steady_state: "bilinear interpolation of performance_table in (pwm_us, bus_voltage_v) for force_n and current_a; no c*n^2 fit (fit residual ~1 N)"
+  dynamics: "F(s)/F_ss(s) = (6136 s + 108700)/(s^3 + 89 s^2 + 9258 s + 108700); poles -13.16, -37.92 +/- 82.60j rad/s; unity DC gain (von Benzon 2022)"
+  fwd_rev_ratio_16v: 0.776              # |F_rev,max| / F_fwd,max from table
+  kt0_fwd: 0.439                        # F / (rho n^2 D^4), 16 V table fit, n in rev/s, D 0.076 m
+  kt0_rev: 0.350
+limitations: >-
+  Vendor tables are bollard (zero advance speed); thrust loss with advance ratio J = U/(nD) is not published
+  for the T200 and is not modelled unless a measured KT(J) is sourced. Water temperature/density effect on
+  the table is not published (tests in fresh water, temperature unstated).

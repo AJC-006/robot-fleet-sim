@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Shared by the category macros. comp_dir is the catalog root; macros read
+       ${comp_dir}/<category>/<model>.yaml with xacro.load_yaml. -->
+  <xacro:property name="comp_dir" value="$(find fleet_components)/components"/>
+
+  <!-- Solid box of mass m and outline x y z (m) about its centre, inertial origin at the link frame. -->
+  <xacro:macro name="box_inertial" params="m x y z">
+    <inertial>
+      <mass value="${m}"/>
+      <inertia ixx="${m / 12 * (y * y + z * z)}" iyy="${m / 12 * (x * x + z * z)}" izz="${m / 12 * (x * x + y * y)}"
+               ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- Frame-only link: fixed joint from `parent` at xyz / rpy, optional box inertial. -->
+  <xacro:macro name="fixed_frame" params="name parent xyz rpy:='0 0 0'">
+    <link name="${name}"/>
+    <joint name="${name}_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${name}"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+    </joint>
+  </xacro:macro>
+</robot>

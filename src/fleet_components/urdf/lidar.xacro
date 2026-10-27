@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- 2D spinning lidar from the catalog (components/lidar/<model>.yaml).
+       The link frame is the scan plane, x = ROS angle 0. The real driver (ros_driver block) reports the device's
+       clockwise scan reversed, so the driver frame points at the housing back; the sim keeps the frame
+       aligned with the robot and the node `lidar_driver_sim` reproduces the driver's bins and fields.
+       gz_topic carries the raw gz scan, to be adapted by lidar_driver_sim (fleet_sensor_sim). -->
+  <xacro:include filename="$(find fleet_components)/urdf/common.xacro"/>
+  <xacro:macro name="lidar" params="model parent xyz rpy:='0 0 0' frame:=laser_frame gz_topic:=gz/scan">
+    <xacro:property name="c" value="${xacro.load_yaml(comp_dir + '/lidar/' + model + '.yaml')}"/>
+    <xacro:property name="sz" value="${c['specs'].get('size', c['specs'].get('size_estimate'))}"/>
+    <xacro:property name="sm" value="${c['sim']}"/>
+    <link name="${frame}">
+      <xacro:box_inertial m="${c['specs']['mass']}" x="${sz[0]}" y="${sz[1]}" z="${sz[2]}"/>
+    </link>
+    <joint name="${frame}_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${frame}"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+    </joint>
+    <gazebo reference="${frame}">
+      <sensor name="lidar" type="gpu_lidar">
+        <pose>0 0 0 0 0 0</pose>
+        <topic>${gz_topic}</topic>
+        <gz_frame_id>${frame}</gz_frame_id>
+        <update_rate>${sm['update_rate']}</update_rate>
+        <always_on>true</always_on>
+        <visualize>false</visualize>
+        <lidar>
+          <scan>
+            <horizontal>
+              <samples>${sm['samples_per_rev']}</samples>
+              <resolution>1</resolution>
+              <min_angle>${-pi}</min_angle>
+              <max_angle>${pi - 2 * pi / sm['samples_per_rev']}</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>${sm['range_min']}</min>
+            <max>${sm['range_max']}</max>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>${sm['range_noise_stddev']}</stddev>
+          </noise>
+        </lidar>
+      </sensor>
+    </gazebo>
+  </xacro:macro>
+</robot>

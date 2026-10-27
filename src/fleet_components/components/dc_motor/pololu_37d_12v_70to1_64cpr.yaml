@@ -1,0 +1,37 @@
+model: Pololu 70:1 Metal Gearmotor 37Dx70L mm 12V with 64 CPR Encoder (#4754)
+category: dc_motor
+vendor: Pololu
+datasheet: https://www.pololu.com/file/0J1736/pololu-37d-metal-gearmotors-rev-1-2.pdf
+sources:
+  - {url: https://www.pololu.com/product/4754, used_for: "product page"}
+  - {url: https://www.pololu.com/product/4754/specs, used_for: "mass 205 g, 150 rpm, 27 kg cm stall, 4480 counts per output rev"}
+specs:
+  nominal_voltage: 12.0
+  gear_ratio: 70.0
+  no_load_speed_rpm: 150
+  no_load_current: 0.2
+  stall_torque: 2.65                    # N m = 27 kg cm (extrapolated)
+  stall_current: 5.5                    # A (product page, extrapolated); datasheet-table row used in G1: 5.2 A
+  recommended_continuous_torque: 0.98
+  instantaneous_torque_limit: 2.45
+  encoder_cpr_motor: 64
+  encoder_counts_per_output_rev: 4480   # = 64 * 70
+  mass: 0.205
+  shaft_diameter: 0.006
+  motor_diameter: 0.037
+  body_length: 0.070
+sim:
+  # graph fits (12 V): w = 150 - 0.53 tau, I = 0.088 + 0.018 tau
+  resistance: 2.31                      # ohm; G1 BOM: R = 12 V / I_stall,graph (5.2 A)
+  back_emf_constant: 0.7477             # V s/rad = 12 / (150 rpm * 2 pi / 60)
+  torque_constant: 0.545                # N m/A = 9.80665e-3 / 0.018
+  no_load_current: 0.088
+  gearbox_efficiency: 0.729
+  encoder_counts_per_rev: 4480
+unpublished:
+  rotor_inertia: "not published"
+  inductance: "not published"
+  gearbox_backlash: "not published"
+limitations: >-
+  As the 50:1 entry. Product page stall current 5.5 A differs from the 5.2 A graph-table value used for R;
+  the 5 % spread is inside the datasheet's own extrapolation uncertainty.

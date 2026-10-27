@@ -1,0 +1,18 @@
+model: Solid rubber tread on dry concrete (contact model, not a vendor part)
+category: tyre
+vendor: none (material data)
+datasheet: https://www.engineeringtoolbox.com/friction-coefficients-d_778.html
+sources:
+  - {url: https://www.engineeringtoolbox.com/friction-coefficients-d_778.html, used_for: "row 'Rubber / Dry Concrete, clean and dry: 0.6 - 0.85' (no static/kinetic split)"}
+  - {url: https://www.engineeringtoolbox.com/rolling-friction-resistance-d_1303.html, used_for: "rolling resistance 'ordinary car tires on concrete, new asphalt: 0.01 - 0.015'"}
+specs:
+  friction_coefficient_range: [0.6, 0.85]
+  rolling_resistance_range: [0.01, 0.015]
+sim:
+  mu: 0.725                             # midpoint of 0.6-0.85. The floor's own pair value (docs/notes/ground.md G2) is applied with min(); DART has one coefficient, static = kinetic
+  rolling_resistance: 0.0125            # C_rr midpoint of 0.01-0.015 (car tyres, an upper bound for small solid rubber); the G4 actuator plugin applies C_rr N r
+limitations: >-
+  This is a material model, not a purchasable wheel: the real wheel products matching the robots' 70-140 mm
+  diameters were not selected (Pololu stock wheels are 60-90 mm and 14-23 g, far below the robots' wheel
+  masses). Ranges come from a general engineering table, not a measurement of a specific compound. Open item
+  for the usability phase: pick a wheel product per robot and measure mu on the floors.

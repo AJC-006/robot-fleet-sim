@@ -1,0 +1,47 @@
+model: Water Linked DVL A50 (standard)
+category: dvl
+vendor: Water Linked
+datasheet: https://docs.waterlinked.com/dvl/dvl-a50/
+sources:
+  - {url: https://docs.waterlinked.com/dvl/dvl-a50/, used_for: "frequency, beams, altitude range, velocity range/resolution, accuracy, ping rate, power, size, mass"}
+  - {url: https://docs.waterlinked.com/dvl/dvl-protocol/, used_for: "body frame (x forward at LED, y right, z down), velocity report fields"}
+  - {url: https://docs.waterlinked.com/dvl/dvl-json-protocol-a50-a125/, used_for: "report fields incl. covariance, fom, altitude, ping rate 2-15 Hz"}
+  - {url: https://github.com/waterlinked/waterlinked_dvl, used_for: "ROS 2 driver waterlinked_dvl_driver: topics, message fields, frame_id, QoS, parameters"}
+specs:
+  acoustic_frequency: 1.0e6             # Hz (1 MHz)
+  beams: 4                              # convex Janus
+  beam_angle_from_vertical: 0.3927      # rad (22.5 deg)
+  altitude_min: 0.05                    # m
+  altitude_max: 50.0                    # m
+  velocity_max: 3.75                    # m/s
+  velocity_resolution: 0.0001           # m/s (0.1 mm/s)
+  long_term_accuracy: 0.0101            # fraction of speed (+/-1.01 %, standard; performance version +/-0.1 %)
+  ping_rate_range: [4.0, 15.0]          # Hz, adaptive to altitude (JSON protocol page says 2-15 Hz)
+  per_ping_velocity_noise: unpublished  # JSON example covariance diag ~2.4e-8 m^2/s^2 at 0.49 m altitude (single example, not a spec)
+  supply_voltage_range: [10.0, 30.0]    # V
+  power: 4.0                            # W
+  diameter: 0.066                       # m
+  height: 0.025                         # m
+  mass_air: 0.170                       # kg
+  mass_water: 0.105                     # kg
+ros_driver:
+  package: waterlinked_dvl_driver       # lifecycle node 'waterlinked_dvl_driver' under the robot namespace
+  topics:
+    waterlinked_dvl_driver/velocity_report: marine_acoustic_msgs/msg/Dvl        # bottom track (velocity_mode BOTTOM)
+    waterlinked_dvl_driver/velocity_water_report: marine_acoustic_msgs/msg/Dvl  # water track (altitude NaN)
+    waterlinked_dvl_driver/odom: nav_msgs/msg/Odometry                          # frame_id and child_frame_id both dvl_link
+    waterlinked_dvl_driver/dead_reckoning_report: geometry_msgs/msg/PoseWithCovarianceStamped
+  frame_id: dvl_link                    # FRD body frame of the DVL (x at LED, z down); URDF joint base_link->dvl_link has roll pi
+  rate_hz: 4-15 (altitude dependent)
+  qos: system_default
+  parameters: {ip_address: 192.168.194.95, port: 16171, frame_id: dvl_link, speed_of_sound: 1481.0}
+sim:
+  velocity: "body velocity of dvl_link w.r.t. bottom, expressed in dvl_link (FRD), quantised to 0.1 mm/s"
+  scale_error: "one constant per run, within +/-1.01 % (spec); default 0"
+  validity: "invalid (velocity_valid false, beam ranges NaN) outside 0.05-50 m altitude or above 3.75 m/s"
+  beam_unit_vec: "reproduce driver output as published: (+/-0.6533, +/-0.6533, 0.3827); note this is 67.5 deg from z, the datasheet beam angle is 22.5 deg"
+  sound_speed: 1481.0                   # m/s driver default
+limitations: >-
+  Per-ping noise, ping-rate-versus-altitude law, beam footprint effects and bottom-type dependent
+  dropouts are unpublished; the simulation does not invent them. Dead-reckoning output uses the
+  DVL's integrated AHRS, whose accuracy is unpublished.

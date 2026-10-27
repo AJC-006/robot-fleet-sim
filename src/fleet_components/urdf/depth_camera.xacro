@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- RGB-D camera from the catalog (components/depth_camera/<model>.yaml), frames as realsense2_camera:
+       camera_link (X forward) -> camera_{depth,color}_frame -> camera_{depth,color}_optical_frame (Z forward).
+       Depth and colour frames are co-located (the device extrinsics are not in the datasheet).
+       The mass is always present; the Gazebo sensors only when `sensors` is true (launch camera:=true).
+       gz topics carry raw renders; camera_driver_sim publishes the driver topics, intrinsics and depth
+       noise (sim.depth_noise_*). -->
+  <xacro:include filename="$(find fleet_components)/urdf/common.xacro"/>
+  <xacro:macro name="depth_camera" params="model parent xyz rpy:='0 0 0' sensors:=true">
+    <xacro:property name="c" value="${xacro.load_yaml(comp_dir + '/depth_camera/' + model + '.yaml')}"/>
+    <xacro:property name="sz" value="${c['specs']['size']}"/>
+    <xacro:property name="sm" value="${c['sim']}"/>
+    <xacro:property name="fr" value="${c['ros_driver']['frame_id']}"/>
+    <link name="${fr['base']}">
+      <!-- the 90 mm side of the datasheet outline is the lateral width (y) -->
+      <xacro:box_inertial m="${c['specs']['mass']}" x="${sz[1]}" y="${sz[0]}" z="${sz[2]}"/>
+    </link>
+    <joint name="${fr['base']}_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${fr['base']}"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+    </joint>
+    <xacro:fixed_frame name="camera_depth_frame" parent="${fr['base']}" xyz="0 0 0"/>
+    <xacro:fixed_frame name="${fr['depth']}" parent="camera_depth_frame" xyz="0 0 0" rpy="${-pi / 2} 0 ${-pi / 2}"/>
+    <xacro:fixed_frame name="camera_color_frame" parent="${fr['base']}" xyz="0 0 0"/>
+    <xacro:fixed_frame name="${fr['color']}" parent="camera_color_frame" xyz="0 0 0" rpy="${-pi / 2} 0 ${-pi / 2}"/>
+    <xacro:if value="${sensors}">
+      <gazebo reference="camera_color_frame">
+        <sensor name="color" type="camera">
+          <pose>0 0 0 0 0 0</pose>
+          <topic>gz/camera/color/image</topic>
+          <gz_frame_id>${fr['color']}</gz_frame_id>
+          <update_rate>${sm['color']['rate']}</update_rate>
+          <always_on>true</always_on>
+          <visualize>false</visualize>
+          <camera>
+            <horizontal_fov>${sm['color']['hfov_rad']}</horizontal_fov>
+            <image><width>${sm['color']['width']}</width><height>${sm['color']['height']}</height><format>R8G8B8</format></image>
+            <clip><near>0.05</near><far>${sm['depth_clip_far']}</far></clip>
+          </camera>
+        </sensor>
+      </gazebo>
+      <gazebo reference="camera_depth_frame">
+        <sensor name="depth" type="depth_camera">
+          <pose>0 0 0 0 0 0</pose>
+          <topic>gz/camera/depth/image</topic>
+          <gz_frame_id>${fr['depth']}</gz_frame_id>
+          <update_rate>${sm['depth']['rate']}</update_rate>
+          <always_on>true</always_on>
+          <visualize>false</visualize>
+          <camera>
+            <horizontal_fov>${sm['depth']['hfov_rad']}</horizontal_fov>
+            <image><width>${sm['depth']['width']}</width><height>${sm['depth']['height']}</height><format>R_FLOAT32</format></image>
+            <clip><near>${sm['depth_clip_near']}</near><far>${sm['depth_clip_far']}</far></clip>
+          </camera>
+        </sensor>
+      </gazebo>
+    </xacro:if>
+  </xacro:macro>
+</robot>

@@ -1,0 +1,31 @@
+model: TE Connectivity (Measurement Specialties) MS5611-01BA03 barometric pressure sensor
+category: barometer
+vendor: TE Connectivity
+datasheet: https://www.te.com/commerce/DocumentDelivery/DDEController?Action=showdoc&DocId=Data+Sheet%7FMS5611-01BA03%7FB3%7Fpdf%7FEnglish%7FENG_DS_MS5611-01BA03_B3.pdf   # local copy used
+sources:
+  - {path: src/drivers/barometer/ms5611/MS5611.hpp (PX4 v1.18.0-beta1), used_for: "PX4 converts at OSR 1024 every 10 ms (MS5611_CONVERSION_INTERVAL, OSR1024 time 2.28 ms); D1 and D2 alternate -> pressure at 50 Hz"}
+  - {url: https://docs.holybro.com/autopilot/pixhawk-6c/overview, used_for: "MS5611 on the Pixhawk 6C"}
+specs:
+  resolution_rms_osr1024: 2.7           # Pa = 0.027 mbar RMS (datasheet, OSR 1024)
+  resolution_rms_osr4096: 1.2           # Pa = 0.012 mbar
+  output_lsb: 1.0                       # Pa (compensated pressure in 0.01 mbar)
+  absolute_accuracy_25c_750mbar: 150.0  # Pa = +-1.5 mbar (tolerance bound)
+  long_term_stability: 100.0            # Pa/yr = +-1 mbar
+  range: [45000.0, 110000.0]            # Pa (450-1100 mbar full accuracy)
+ros_driver:
+  package: PX4 on-board driver ms5611 (uXRCE-DDS)
+  topics: {}                            # vehicle_air_data is not in this PX4 checkout's default dds_topics.yaml; add it via UXRCE_DDS_CFG
+  frame_id: none
+  rate_hz: 50
+  qos: PX4 uXRCE-DDS default
+sim:
+  gz_sensor: air_pressure               # PX4 reads .../sensor/air_pressure_sensor/air_pressure
+  update_rate: 50
+  stddev: 2.7                           # Pa (OSR 1024 RMS)
+  precision: 1.0                        # Pa, gaussian_quantized
+  # turn-on offset drawn once per run; ASSUMPTION: the accuracy tolerance is a 3-sigma bound
+  bias_stddev: 50.0                     # Pa = 150 / 3
+limitations: >-
+  Temperature coefficient, drift, the propeller-wash and body-pressure disturbances of a real airframe
+  (several Pa, the dominant real baro error near the ground) and the 2nd-order temperature compensation
+  are not modelled. gz applies the noise model without a time step, so the offset stays constant per run.

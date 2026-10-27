@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypenamespace="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>fleet_bringup</name>
+  <version>0.1.0</version>
+  <description>Launch, Nav2, EKF and ros2_control configuration for the robot-fleet-sim robots and worlds.</description>
+  <maintainer email="65161979+AJC-006@users.noreply.github.com">Alan</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>fleet_description</exec_depend>
+  <exec_depend>fleet_worlds</exec_depend>
+  <exec_depend>fleet_sensor_sim</exec_depend>
+  <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>controller_manager</exec_depend>
+  <exec_depend>gz_ros2_control</exec_depend>
+  <exec_depend>diff_drive_controller</exec_depend>
+  <exec_depend>joint_state_broadcaster</exec_depend>
+  <exec_depend>robot_localization</exec_depend>
+  <exec_depend>nav2_bringup</exec_depend>
+  <exec_depend>nav2_simple_commander</exec_depend>
+  <exec_depend>lifecycle_msgs</exec_depend>
+  <exec_depend>fleet_legged</exec_depend>
+  <exec_depend>position_controllers</exec_depend>
+  <exec_depend>slam_toolbox</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>teleop_twist_keyboard</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+
+  <test_depend>ament_cmake_pytest</test_depend>
+  <test_depend>python3-numpy</test_depend>
+  <test_depend>python3-pytest</test_depend>
+  <test_depend>sensor_msgs</test_depend>
+  <test_depend>rclpy</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

@@ -1,0 +1,31 @@
+model: T-Motor AIR2216II KV920 (stand-in for the Holybro 2216 KV920 of the X500 V2 kit)
+category: bldc_motor
+vendor: T-Motor
+datasheet: https://store.tmotor.com/product/air-gear-450-ii-multicopter.html   # Air Gear 450 II page: motor specs and thrust table
+sources:
+  - {url: https://store.tmotor.com/product/air-gear-450-ii-multicopter.html, used_for: "KV 920, internal resistance 115 +-10 mOhm, idle current 0.8 A @10 V, peak 17 A, 64 +-2 g, thrust table with T1045 at 16 V"}
+  - {url: https://docs.holybro.com/drone-development-kit/px4-development-kit-x500v2.md, used_for: "X500 V2 uses a Holybro 2216 KV920 motor; Holybro publishes no thrust table, so the T-Motor motor of the same size and KV is the nearest published match. NOT verified to be the same motor."}
+specs:
+  kv_rpm_per_volt: 920
+  resistance: 0.115                     # ohm
+  idle_current_a: 0.8                   # A @ 10 V
+  peak_current_a: 17.0                  # A, 180 s
+  mass: 0.064                           # kg
+  max_power_w: 272
+ros_driver:
+  package: none (PX4 drives the motors; actuator state is not exposed)
+  topics: {}
+  frame_id: none
+  rate_hz: 0
+  qos: none
+sim:
+  gz_system: gz::sim::systems::MulticopterMotorModel
+  ke_v_per_rad_s: 0.01038               # 60 / (2 pi KV)
+  motor_constant: 1.2295e-5             # see propeller/tmotor_t1045 (combined motor+prop fit)
+  moment_constant: 0.01404
+  max_rot_velocity: 1032.2
+  time_constant_up: 0.062               # s, derived in docs/notes/air.md (electrical drive with active braking, ESC assumed)
+  time_constant_down: 0.062
+limitations: >-
+  Stand-in motor, see sources. No thermal model, no back-EMF saturation at low battery voltage (the fit is for
+  16 V; the MulticopterMotorModel has no supply-voltage input), no ESC commutation noise.

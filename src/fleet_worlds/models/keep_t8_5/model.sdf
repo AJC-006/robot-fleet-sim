@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <model name="keep_t8_5">
+    <static>true</static>
+    <link name="link">
+      <visual name="visual">
+        <cast_shadows>false</cast_shadows>
+        <geometry><mesh><uri>model://keep_t8_5/../keep_env/meshes/keep_t8_5.gltf</uri></mesh></geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

@@ -1,0 +1,38 @@
+model: Pololu 50:1 Metal Gearmotor 37Dx70L mm 12V with 64 CPR Encoder (#4753)
+category: dc_motor
+vendor: Pololu
+datasheet: https://www.pololu.com/file/0J1736/pololu-37d-metal-gearmotors-rev-1-2.pdf
+sources:
+  - {url: https://www.pololu.com/product/4753, used_for: "product page: mass 205 g, ratio, encoder counts, stall values (extrapolated)"}
+  - {url: https://www.pololu.com/product/4753/specs, used_for: "size 37 x 70 mm, 6 mm D shaft"}
+specs:
+  nominal_voltage: 12.0                 # V
+  gear_ratio: 50.0
+  no_load_speed_rpm: 200
+  no_load_current: 0.2                  # A (motor+gearbox+encoder, product page); graph fit I0 below
+  stall_torque: 2.06                    # N m = 21 kg cm (extrapolated by Pololu)
+  stall_current: 5.5                    # A (extrapolated by Pololu; the G1 graph-fit row quotes 5.5)
+  recommended_continuous_torque: 0.98   # N m = 100 kg mm
+  instantaneous_torque_limit: 2.45      # N m = 250 kg mm
+  encoder_cpr_motor: 64                 # quadrature counts per motor-shaft revolution
+  encoder_counts_per_output_rev: 3200   # = 64 * 50
+  mass: 0.205                           # kg
+  shaft_diameter: 0.006                 # m
+  motor_diameter: 0.037                 # m
+  body_length: 0.070                    # m
+sim:
+  # DC model from the datasheet graph fits (tau in kg mm, I in A, w in rpm, 12 V): w = 200 - 1.0 tau, I = 0.080 + 0.026 tau
+  resistance: 2.22                      # ohm; G1 BOM: R = 12 V / I_stall,graph
+  back_emf_constant: 0.5604             # V s/rad (output shaft) = 12 / (200 rpm * 2 pi / 60)
+  torque_constant: 0.377                # N m/A (output shaft, includes gearbox efficiency) = 9.80665e-3 / 0.026
+  no_load_current: 0.080                # A (graph fit intercept: gearbox + motor friction)
+  gearbox_efficiency: 0.673             # = torque_constant / back_emf_constant (G1)
+  encoder_counts_per_rev: 3200
+unpublished:
+  rotor_inertia: "not published by Pololu; G4 estimates from the 37D motor geometry or lists it as unmodelled"
+  inductance: "not published; the electrical pole is dropped (quasi-static model)"
+  gearbox_backlash: "not published"
+limitations: >-
+  Stall values are extrapolated by the vendor. Quasi-static electrical model (no inductance), no thermal
+  model, no gearbox backlash. Mass and gear ratio are exact; efficiency and constants come from graph
+  fits at 12 V and are applied at the actual pack voltage. The actuator plugin (G4) consumes `sim`.

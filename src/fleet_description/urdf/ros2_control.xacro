@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="wheel_joint" params="name">
+    <joint name="${name}_joint">
+      <command_interface name="velocity">
+        <param name="min">-30</param>
+        <param name="max">30</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- Plugin that loads the controller_manager inside Gazebo; controllers_file is the
+       diff_drive_controller parameter yaml (placeholder path when not given). -->
+  <xacro:macro name="gz_ros2_control_plugin" params="params_file">
+    <gazebo>
+      <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>${params_file}</parameters>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+</robot>
